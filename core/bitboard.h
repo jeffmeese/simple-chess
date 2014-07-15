@@ -5,11 +5,10 @@
 #include "move.h"
 #include "movelist.h"
 #include "stalematecondition.h"
-#include "abstractboard.h"
 
 #include <list>
 
-class BitBoard //: public AbstractBoard
+class BitBoard
 {
 public:
 	BitBoard(void);

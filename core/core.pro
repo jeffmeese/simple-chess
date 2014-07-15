@@ -6,44 +6,43 @@
 
 QT       -= gui
 CONFIG   += c++11
-TARGET = core
-TEMPLATE = lib
+TARGET    = core
+TEMPLATE  = lib
+DEFINES  += CORE_LIBRARY
+CONFIG += staticlib
 
-DEFINES += CORE_LIBRARY
+APPNAME = core
+
+include (../common.pri)
 
 CONFIG(release, debug|release) {
-    OBJECTS_DIR = build/release
-    DESTDIR = ../lib
+  DESTDIR = $$BUILDROOT/lib
+  TARGET=core
 }
 
 CONFIG(debug, debug|release) {
-    OBJECTS_DIR = build/debug
-    DESTDIR = ../lib
+  DESTDIR = $$BUILDROOT/lib
+  TARGET=cored
 }
 
 SOURCES += \
-    abstractboard.cpp \
-    abstractengine.cpp \
     move.cpp \
     movelist.cpp \
     piecetype.cpp \
-    standardboard.cpp \
     stopwatch.cpp \
     stopwatchholder.cpp \
     board15x12.cpp \
     standardengine.cpp \
     bitboard.cpp \
     board0x88.cpp \
-    fenparser.cpp
+    fenparser.cpp \
+    board8x8.cpp
 
 HEADERS +=\
-        core_global.h \
-    abstractboard.h \
-    abstractengine.h \
+    core_global.h \
     move.h \
     movelist.h \
     piecetype.h \
-    standardboard.h \
     types.h \
     stopwatch.h \
     stopwatchholder.h \
@@ -52,9 +51,5 @@ HEADERS +=\
     standardengine.h \
     bitboard.h \
     board0x88.h \
-    fenparser.h
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
+    fenparser.h \
+    board8x8.h

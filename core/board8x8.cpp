@@ -1,4 +1,5 @@
-#include "standardboard.h"
+#include "board8x8.h"
+#include "move.h"
 #include "movelist.h"
 
 static const uint WHITE_ROW = 0;
@@ -16,33 +17,33 @@ static const uint QUEEN_CASTLE_ROOK_COL = 3;
 static const uint WHITE_PROMOTION_ROW = 7;
 static const uint BLACK_PROMOTION_ROW = 0;
 
-StandardBoard::StandardBoard()
+Board8x8::Board8x8()
 {
   initBoard();
   initMoves();
 }
 
-bool StandardBoard::canBlackCastleKingSide() const
+bool Board8x8::canBlackCastleKingSide() const
 {
   return mBlackCastleKingSide;
 }
 
-bool StandardBoard::canBlackCastleQueenSide() const
+bool Board8x8::canBlackCastleQueenSide() const
 {
   return mBlackCastleQueenSide;
 }
 
-bool StandardBoard::canWhiteCastleKingSide() const
+bool Board8x8::canWhiteCastleKingSide() const
 {
   return mWhiteCastleKingSide;
 }
 
-bool StandardBoard::canWhiteCastleQueenSide() const
+bool Board8x8::canWhiteCastleQueenSide() const
 {
   return mWhiteCastleQueenSide;
 }
 
-uint StandardBoard::generateLegalMoves(MoveList & moveList)
+uint Board8x8::generateLegalMoves(MoveList & moveList)
 {
   // Generate the list of candidate moves
   MoveList candidateMoves;
@@ -54,7 +55,7 @@ uint StandardBoard::generateLegalMoves(MoveList & moveList)
   return moveList.totalMoves();
 }
 
-uint StandardBoard::generateLegalMoves(uint row, uint col, MoveList & moveList)
+uint Board8x8::generateLegalMoves(uint row, uint col, MoveList & moveList)
 {
   // Generate the list of candidate moves
   MoveList candidateMoves;
@@ -66,7 +67,7 @@ uint StandardBoard::generateLegalMoves(uint row, uint col, MoveList & moveList)
   return moveList.totalMoves();
 }
 
-void StandardBoard::generateBishopMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateBishopMoves(uint row, uint col, MoveList & moveList)
 {
   uint index = getIndex(row, col);
   generateMoves(mBishopMovesNorthEast[index], row, col, moveList, true);
@@ -75,7 +76,7 @@ void StandardBoard::generateBishopMoves(uint row, uint col, MoveList & moveList)
   generateMoves(mBishopMovesSouthEast[index], row, col, moveList, true);
 }
 
-void StandardBoard::generateBlackPawnMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateBlackPawnMoves(uint row, uint col, MoveList & moveList)
 {
   static const PieceType promotedPieceTypes[] =
   { BlackQueen, BlackRook, BlackBishop, BlackKnight };
@@ -156,7 +157,7 @@ void StandardBoard::generateBlackPawnMoves(uint row, uint col, MoveList & moveLi
   }
 }
 
-void StandardBoard::generateCandidateMoves(MoveList & moveList)
+void Board8x8::generateCandidateMoves(MoveList & moveList)
 {
   for (uint index = 0; index < 64; index++) {
     uint row = index >> 3;
@@ -216,7 +217,7 @@ void StandardBoard::generateCandidateMoves(MoveList & moveList)
   }
 }
 
-void StandardBoard::generateCandidateMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateCandidateMoves(uint row, uint col, MoveList & moveList)
 {
   PieceType pieceType = getPieceType(row, col);
   if (pieceType == NoPiece)
@@ -255,7 +256,7 @@ void StandardBoard::generateCandidateMoves(uint row, uint col, MoveList & moveLi
   }
 }
 
-void StandardBoard::generateKingMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateKingMoves(uint row, uint col, MoveList & moveList)
 {
   uint index = getIndex(row, col);
   generateMoves(mKingMoves[index], row, col, moveList, false);
@@ -301,13 +302,13 @@ void StandardBoard::generateKingMoves(uint row, uint col, MoveList & moveList)
   }
 }
 
-void StandardBoard::generateKnightMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateKnightMoves(uint row, uint col, MoveList & moveList)
 {
   uint index = getIndex(row, col);
   generateMoves(mKnightMoves[index], row, col, moveList, false);
 }
 
-void StandardBoard::generateMoves(
+void Board8x8::generateMoves(
     std::list<uint> & indexList,
     uint row,
     uint col,
@@ -337,13 +338,13 @@ void StandardBoard::generateMoves(
   }
 }
 
-void StandardBoard::generateQueenMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateQueenMoves(uint row, uint col, MoveList & moveList)
 {
   generateBishopMoves(row, col, moveList);
   generateRookMoves(row, col, moveList);
 }
 
-void StandardBoard::generateRookMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateRookMoves(uint row, uint col, MoveList & moveList)
 {
   uint index = getIndex(row, col);
   generateMoves(mRookMovesNorth[index], row, col, moveList, true);
@@ -352,7 +353,7 @@ void StandardBoard::generateRookMoves(uint row, uint col, MoveList & moveList)
   generateMoves(mRookMovesWest[index], row, col, moveList, true);
 }
 
-void StandardBoard::generateWhitePawnMoves(uint row, uint col, MoveList & moveList)
+void Board8x8::generateWhitePawnMoves(uint row, uint col, MoveList & moveList)
 {
   static const PieceType promotedPieceTypes[] =
   { WhiteQueen, WhiteRook, WhiteBishop, WhiteKnight };
@@ -434,17 +435,17 @@ void StandardBoard::generateWhitePawnMoves(uint row, uint col, MoveList & moveLi
   }
 }
 
-uint StandardBoard::getBlackKingRow() const
+uint Board8x8::getBlackKingRow() const
 {
   return mBlackKingRow;
 }
 
-uint StandardBoard::getBlackKingCol() const
+uint Board8x8::getBlackKingCol() const
 {
   return mBlackKingCol;
 }
 
-void StandardBoard::getCastlingRights(uint & castlingRights) const
+void Board8x8::getCastlingRights(uint & castlingRights) const
 {
   if (canWhiteCastleKingSide())
     castlingRights |= CastleWhiteKing;
@@ -456,33 +457,33 @@ void StandardBoard::getCastlingRights(uint & castlingRights) const
     castlingRights |= CastleBlackQueen;
 }
 
-uint StandardBoard::getIndex(uint row, uint col) const
+uint Board8x8::getIndex(uint row, uint col) const
 {
   return (row << 3) + col;
 }
 
-void StandardBoard::getRowCol(uint index, uint & row, uint & col) const
+void Board8x8::getRowCol(uint index, uint & row, uint & col) const
 {
   row = index >> 3;
   col = index & 7;
 }
 
-uint StandardBoard::getWhiteKingRow() const
+uint Board8x8::getWhiteKingRow() const
 {
   return mWhiteKingRow;
 }
 
-uint StandardBoard::getWhiteKingCol() const
+uint Board8x8::getWhiteKingCol() const
 {
   return mWhiteKingCol;
 }
 
-PieceType StandardBoard::getPieceType(uint row, uint col) const
+PieceType Board8x8::getPieceType(uint row, uint col) const
 {
   return mPieceType[getIndex(row,col)];
 }
 
-void StandardBoard::initBoard()
+void Board8x8::initBoard()
 {
   mWhiteToMove = true;
   mWhiteCastleKingSide = mWhiteCastleQueenSide = mBlackCastleKingSide = mBlackCastleQueenSide = mWhiteEnPassant = mBlackEnPassant = true;
@@ -522,7 +523,7 @@ void StandardBoard::initBoard()
   }
 }
 
-void StandardBoard::initMoves()
+void Board8x8::initMoves()
 {
   static const int knightRowIncr [] = {2, 1, -1, -2,  -2,  -1,  1,  2};
   static const int knightColIncr [] = {1, 2,  2,  1,  -1,  -2, -2, -1};
@@ -662,17 +663,17 @@ void StandardBoard::initMoves()
   }
 }
 
-bool StandardBoard::isBlackChecked() const
+bool Board8x8::isBlackChecked() const
 {
   return mBlackChecked;
 }
 
-bool StandardBoard::isBlackMated() const
+bool Board8x8::isBlackMated() const
 {
   return mBlackMated;
 }
 
-bool StandardBoard::isCellAttacked(uint row, uint col, bool whitePiece) const
+bool Board8x8::isCellAttacked(uint row, uint col, bool whitePiece) const
 {
   PieceType pieceType = getPieceType(row, col);
 
@@ -806,7 +807,7 @@ bool StandardBoard::isCellAttacked(uint row, uint col, bool whitePiece) const
   return false;
 }
 
-bool StandardBoard::isLegal() const
+bool Board8x8::isLegal() const
 {
   if (!isWhiteToMove() && isCellAttacked(mWhiteKingRow, mWhiteKingCol, true))
     return false;
@@ -817,22 +818,22 @@ bool StandardBoard::isLegal() const
   return true;
 }
 
-bool StandardBoard::isWhiteChecked() const
+bool Board8x8::isWhiteChecked() const
 {
   return mWhiteChecked;
 }
 
-bool StandardBoard::isWhiteMated() const
+bool Board8x8::isWhiteMated() const
 {
   return mWhiteMated;
 }
 
-bool StandardBoard::isWhiteToMove() const
+bool Board8x8::isWhiteToMove() const
 {
   return mWhiteToMove;
 }
 
-void StandardBoard::loadState()
+void Board8x8::loadState()
 {
   uint savedState = mSavedStates.back();
   mSavedStates.pop_back();
@@ -847,7 +848,7 @@ void StandardBoard::loadState()
   mHalfMoveClock = ((savedState >> 9) & 0x003f);
 }
 
-bool StandardBoard::makeMove(Move & newMove)
+bool Board8x8::makeMove(Move & newMove)
 {
   saveState();
 
@@ -1082,7 +1083,7 @@ bool StandardBoard::makeMove(Move & newMove)
   return true;
 }
 
-void StandardBoard::saveState()
+void Board8x8::saveState()
 {
   uint savedState = 0;
 
@@ -1098,12 +1099,12 @@ void StandardBoard::saveState()
   mSavedStates.push_back(savedState);
 }
 
-void StandardBoard::setPosition(const std::string &fenString)
+void Board8x8::setPosition(const std::string &fenString)
 {
   Q_UNUSED(fenString);
 }
 
-void StandardBoard::trimCandidateMoves(MoveList & candidateMoves, MoveList & legalMoves)
+void Board8x8::trimCandidateMoves(MoveList & candidateMoves, MoveList & legalMoves)
 {
   for (uint i = 0; i < candidateMoves.totalMoves(); ++i) {
     Move currentMove(candidateMoves[i]);
@@ -1114,7 +1115,7 @@ void StandardBoard::trimCandidateMoves(MoveList & candidateMoves, MoveList & leg
   }
 }
 
-bool StandardBoard::unmakeMove(Move & oldMove)
+bool Board8x8::unmakeMove(Move & oldMove)
 {
   // Get some information about the move
   uint sourceRow = oldMove.sourceRow();

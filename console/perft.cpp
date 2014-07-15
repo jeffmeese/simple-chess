@@ -63,35 +63,39 @@ ulonglong Perft::executePerft(uint perftDepth)
   uint totalNodes = 0;
   for (uint i = 0; i < totalMoves; i++) {
     Move move = moveList[i];
+
     mBoard->makeMove(move);
+    if (!mBoard->isCellAttacked(mBoard->getKingIndex(!mBoard->mSideToMove), mBoard->mSideToMove))
+      totalNodes += executePerft(perftDepth-1);
+    mBoard->unmakeMove(move);
 
     // Save the table results
     // This will slow down the perft a bit
-    if (mSaveTableResults) {
-      if (move.isCapture())
-        mTotalCaptures++;
-      if (move.isKingCastle() || move.isQueenCastle())
-        mTotalCastles++;
-      if (move.isEnPassant())
-        mTotalEnpassants++;
-      if (move.isPromotion())
-        mTotalPromotions++;
-      if (mBoard->isWhiteChecked() || mBoard->isBlackChecked() )
-        mTotalChecks++;
+//    if (mSaveTableResults) {
+//      if (move.isCapture())
+//        mTotalCaptures++;
+//      if (move.isKingCastle() || move.isQueenCastle())
+//        mTotalCastles++;
+//      if (move.isEnPassant())
+//        mTotalEnpassants++;
+//      if (move.isPromotion())
+//        mTotalPromotions++;
+//      if (mBoard->isWhiteChecked() || mBoard->isBlackChecked() )
+//        mTotalChecks++;
 
-      bool whiteMove = mBoard->isWhiteToMove();
-      bool whiteChecked = mBoard->isWhiteChecked();
-      bool blackChecked = mBoard->isBlackChecked();
-      if ( (whiteMove && whiteChecked) || (!whiteMove && blackChecked) ) {
-        MoveList checkMoves;
-        mBoard->generateLegalMoves(checkMoves);
-        if (checkMoves.totalMoves() == 0) {
-          mTotalCheckmates++;
-        }
-      }
-    }
-    totalNodes += executePerft(perftDepth-1);
-    mBoard->unmakeMove(move);
+//      bool whiteMove = mBoard->isWhiteToMove();
+//      bool whiteChecked = mBoard->isWhiteChecked();
+//      bool blackChecked = mBoard->isBlackChecked();
+//      if ( (whiteMove && whiteChecked) || (!whiteMove && blackChecked) ) {
+//        MoveList checkMoves;
+//        mBoard->generateLegalMoves(checkMoves);
+//        if (checkMoves.totalMoves() == 0) {
+//          mTotalCheckmates++;
+//        }
+//      }
+//    }
+//    totalNodes += executePerft(perftDepth-1);
+//    mBoard->unmakeMove(move);
   }
 
   return totalNodes;

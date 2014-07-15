@@ -24,6 +24,7 @@ private:
   void handleTable(std::istringstream & iss) const;
   void handleNewGame();
   void handlePrint() const;
+  void handleFen() const;
   void handleSetBoard(std::istringstream & iss);
   void handleShow() const;
   void handleUndo();

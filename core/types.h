@@ -13,6 +13,17 @@ enum Color
   ColorEmpty
 };
 
+enum Piece
+{
+  King = 0,
+  Queen,
+  Rook,
+  Bishop,
+  Knight,
+  Pawn,
+  Empty
+};
+
 enum Castling
 {
   CastleWhiteKing = 0x0001,

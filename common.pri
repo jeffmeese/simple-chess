@@ -1,13 +1,12 @@
 INCLUDEPATH += ../
+BUILDROOT = ../build
 
 CONFIG(release, debug|release) {
-    OBJECTS_DIR = build/release
-    DESTDIR = ../bin/release
-    LIBS += -L../lib/release
+  OBJECTS_DIR = $$BUILDROOT/$$APPNAME/obj/release
+  DESTDIR = $$BUILDROOT/bin/release
 }
 
 CONFIG(debug, debug|release) {
-    OBJECTS_DIR = build/debug
-    DESTDIR = ../bin/debug
-    LIBS += -L../lib/debug
+  OBJECTS_DIR = $$BUILDROOT/$$APPNAME/obj/debug
+  DESTDIR = $$BUILDROOT/bin/debug
 }

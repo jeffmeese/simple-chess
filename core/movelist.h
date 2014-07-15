@@ -32,7 +32,8 @@ private:
   void init(uint totalCapacity);
 
 private:
-  Move * mMoves;
+  //Move * mMoves;
+  Move mMoves[256];
   uint mTotalCapacity;
   uint mTotalMoves;
 };

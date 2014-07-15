@@ -37,28 +37,28 @@ void MainWindow::handleMoveCompleted()
 {
   repaint();
 
-  bool gameOver = false;
+  //bool gameOver = false;
 
-  bool isBlackMate = mApplication.game()->isBlackMated();
-  if (isBlackMate) {
-    QString message("Checkmate\r\nWhite wins\r\n\r\nWould you like to play again?");
-    QMessageBox::information(this, "Checkmate", message);
-    gameOver = true;
-  }
+//  bool isBlackMate = mApplication.game()->isBlackMated();
+//  if (isBlackMate) {
+//    QString message("Checkmate\r\nWhite wins\r\n\r\nWould you like to play again?");
+//    QMessageBox::information(this, "Checkmate", message);
+//    gameOver = true;
+//  }
 
-  bool isWhiteMate = mApplication.game()->isWhiteMated();
-  if (isWhiteMate) {
-    QString message("Checkmate\r\nBlack wins\r\n\r\nWould you like to play again?");
-    QMessageBox::information(this, "Checkmate", message);
-    gameOver = true;
-  }
+//  bool isWhiteMate = mApplication.game()->isWhiteMated();
+//  if (isWhiteMate) {
+//    QString message("Checkmate\r\nBlack wins\r\n\r\nWould you like to play again?");
+//    QMessageBox::information(this, "Checkmate", message);
+//    gameOver = true;
+//  }
 
-  bool isStalemate = mApplication.game()->isStalemate();
-  if (isStalemate) {
-    QString message("Stalemate\r\nWould you like to play again?");
-    QMessageBox::information(this, "Stalemate", message);
-    gameOver = true;
-  }
+//  bool isStalemate = mApplication.game()->isStalemate();
+//  if (isStalemate) {
+//    QString message("Stalemate\r\nWould you like to play again?");
+//    QMessageBox::information(this, "Stalemate", message);
+//    gameOver = true;
+//  }
 
 //  if (!gameOver) {
 //    bool blackMove = !mApplication.game()->isWhiteToMove();
@@ -70,8 +70,6 @@ void MainWindow::handleMoveCompleted()
 //      QApplication::restoreOverrideCursor();
 //    }
 //  }
-
-  mBoardView->repaint();
 }
 
 void MainWindow::handleStartNewGame()

@@ -94,4 +94,124 @@ private:
   uint mMove; //!< Single uinteger to hold all data
 };
 
+inline bool Move::isQuiet() const
+{
+  return !( (mMove >> 12) & 0xf);
+}
+
+inline bool Move::isDoublePawnPush() const
+{
+  return ( ( (mMove >> 12)) == 0x0001);
+}
+
+inline bool Move::isKingCastle() const
+{
+  return ( ( (mMove >> 12)) == 0x0002);
+}
+
+inline bool Move::isQueenCastle() const
+{
+  return ( ( (mMove >> 12)) == 0x0003);
+}
+
+inline bool Move::isCapture() const
+{
+  return  (mMove >> 16) & 0x00ff;
+}
+
+inline bool Move::isPromotion() const
+{
+  return (mMove >> 24) & 0x00ff;
+}
+
+inline bool Move::isEnPassant() const
+{
+  return ( ((mMove >> 12) & 0x000f) == 0x0005);
+}
+
+inline uint Move::sourceRow() const
+{
+  return (mMove & 0x0007);
+}
+
+inline uint Move::sourceColumn() const
+{
+  return ( (mMove >> 3) & 0x0007);
+}
+
+inline uint Move::destinationRow() const
+{
+  return ( (mMove >> 6) & 0x0007);
+}
+
+inline uint Move::destinationColumn() const
+{
+  return ( (mMove >> 9) & 0x0007);
+}
+
+inline PieceType Move::capturedPiece() const
+{
+  return PieceType( (mMove >> 16) & 0x00ff);
+}
+
+inline PieceType Move::promotedPiece() const
+{
+  return PieceType( (mMove >> 24) & 0x00ff);
+}
+
+inline bool Move::operator==(const Move & otherMove) const
+{
+  return ((mMove & 0xffff) == (otherMove.mMove & 0xffff));
+}
+
+inline bool Move::operator!=(const Move & otherMove) const
+{
+  return !(*this == otherMove);
+}
+
+inline void Move::setDoublePawnPush()
+{
+  mMove |= 0x1000;
+}
+
+inline void Move::setKingCastle()
+{
+  mMove |= 0x2000;
+}
+
+inline void Move::setQueenCastle()
+{
+  mMove |= 0x3000;
+}
+
+inline void Move::setCapture()
+{
+  mMove |= 0x4000;
+}
+
+inline void Move::setEnPassant()
+{
+  mMove |= 0x5000;
+}
+
+inline void Move::setSourceRow(u_int sourceRow)
+{
+  mMove |= (sourceRow & 0x0007);
+}
+
+inline void Move::setSourceColumn(u_int sourceCol)
+{
+  mMove |= ((sourceCol & 0x0007) << 3);
+}
+
+inline void Move::setDestinationRow(u_int destRow)
+{
+  mMove |= ((destRow & 0x0007) << 6);
+}
+
+inline void Move::setDestinationColumn(u_int destCol)
+{
+  mMove |= ((destCol & 0x0007) << 9);
+}
+
 #endif // #ifndef MOVE_H

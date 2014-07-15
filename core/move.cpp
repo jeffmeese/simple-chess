@@ -5,6 +5,7 @@
 #include <cassert>
 
 Move::Move()
+  : mMove(0)
 {
 }
 
@@ -27,81 +28,6 @@ Move & Move::operator=(const Move & otherMove)
 {
   mMove = otherMove.mMove;
   return *this;
-}
-
-bool Move::isQuiet() const
-{
-  return !( (mMove >> 12) & 0xf);
-}
-
-bool Move::isDoublePawnPush() const
-{
-  return ( ( (mMove >> 12)) == 0x0001);
-}
-
-bool Move::isKingCastle() const
-{
-  return ( ( (mMove >> 12)) == 0x0002);
-}
-
-bool Move::isQueenCastle() const
-{
-  return ( ( (mMove >> 12)) == 0x0003);
-}
-
-bool Move::isCapture() const
-{
-  return  (mMove >> 16) & 0x00ff;
-}
-
-bool Move::isPromotion() const
-{
-  return (mMove >> 24) & 0x00ff;
-}
-
-bool Move::isEnPassant() const
-{
-  return ( ((mMove >> 12) & 0x000f) == 0x0005);
-}
-
-uint Move::sourceRow() const
-{
-  return (mMove & 0x0007);
-}
-
-uint Move::sourceColumn() const
-{
-  return ( (mMove >> 3) & 0x0007);
-}
-
-uint Move::destinationRow() const
-{
-  return ( (mMove >> 6) & 0x0007);
-}
-
-uint Move::destinationColumn() const
-{
-  return ( (mMove >> 9) & 0x0007);
-}
-
-PieceType Move::capturedPiece() const
-{
-  return PieceType( (mMove >> 16) & 0x00ff);
-}
-
-PieceType Move::promotedPiece() const
-{
-  return PieceType( (mMove >> 24) & 0x00ff);
-}
-
-bool Move::operator==(const Move & otherMove) const
-{
-  return ((mMove & 0xffff) == (otherMove.mMove & 0xffff));
-}
-
-bool Move::operator!=(const Move & otherMove) const
-{
-  return !(*this == otherMove);
 }
 
 // This will likely need to be moved since the game state is actually
@@ -296,91 +222,6 @@ bool Move::operator<(const Move & otherMove) const
     return true;
 
   return false;
-}
-
-void Move::setDoublePawnPush()
-{
-  mMove |= 0x1000;
-}
-
-void Move::setKingCastle()
-{
-  mMove |= 0x2000;
-}
-
-void Move::setQueenCastle()
-{
-  mMove |= 0x3000;
-}
-
-void Move::setCapture()
-{
-  mMove |= 0x4000;
-}
-
-void Move::setEnPassant()
-{
-  mMove |= 0x5000;
-}
-
-//void Move::setKnightPromotion()
-//{
-//	mMove |= 0x8000;
-//}
-//
-//void Move::setBishopPromotion()
-//{
-//	mMove |= 0x9000;
-//}
-//
-//void Move::setRookPromotion()
-//{
-//	mMove |= 0xa000;
-//}
-//
-//void Move::setQueenPromotion()
-//{
-//	mMove |= 0xb000;
-//}
-//
-//void Move::setKnightPromotionCapture()
-//{
-//	mMove |= 0xc000;
-//}
-//
-//void Move::setBishopPromotionCapture()
-//{
-//	mMove |= 0xd000;
-//}
-//
-//void Move::setRookPromotionCapture()
-//{
-//	mMove |= 0xe000;
-//}
-//
-//void Move::setQueenPromotionCapture()
-//{
-//	mMove |= 0xf000;
-//}
-
-void Move::setSourceRow(u_int sourceRow)
-{
-  mMove |= (sourceRow & 0x0007);
-}
-
-void Move::setSourceColumn(u_int sourceCol)
-{
-  mMove |= ((sourceCol & 0x0007) << 3);
-}
-
-void Move::setDestinationRow(u_int destRow)
-{
-  mMove |= ((destRow & 0x0007) << 6);
-}
-
-void Move::setDestinationColumn(u_int destCol)
-{
-  mMove |= ((destCol & 0x0007) << 9);
 }
 
 void Move::setCapturedPiece(PieceType pieceType)

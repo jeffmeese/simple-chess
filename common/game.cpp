@@ -3,6 +3,8 @@
 #include <core/move.h>
 #include <core/movelist.h>
 
+#include <iostream>
+
 Game::Game()
   : mBoard(new Board)
   , mEngine(new Engine)
@@ -14,6 +16,11 @@ Game::Game()
 
 Game::~Game()
 {
+}
+
+const Board * Game::board() const
+{
+  return mBoard.get();
 }
 
 void Game::checkMateCondition()
@@ -36,7 +43,7 @@ bool Game::doMove(const Move & newMove)
 {
   mBoard->makeMove(newMove);
   mCompletedMoves->addMove(newMove);
-  checkMateCondition();
+  //checkMateCondition();
 
   return true;
 }

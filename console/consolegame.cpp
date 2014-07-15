@@ -120,6 +120,11 @@ void ConsoleGame::handleDivide(std::istringstream & iss) const
   perft.divide(perftLevel);
 }
 
+void ConsoleGame::handleFen() const
+{
+  std::cout << board()->getFenString() << "\n";
+}
+
 void ConsoleGame::handleNewGame()
 {
   mGameOver = false;
@@ -257,7 +262,7 @@ void ConsoleGame::handlePrint() const
 void ConsoleGame::handleSetBoard(std::istringstream & iss)
 {
   std::string fenString;
-  iss >> fenString;
+  std::getline(iss, fenString);
   if (fenString.empty()) {
     std::cout << "A fen string must be provided\n";
     return;
@@ -301,10 +306,10 @@ bool ConsoleGame::isGameOver()
 
 int ConsoleGame::run()
 {
-//  std::string cmdString("3");
-//  std::istringstream iss(cmdString);
-//  handleTable(iss);
-//  return 0;
+  std::string cmdString("4");
+  std::istringstream iss(cmdString);
+  handlePerft(iss);
+  return 0;
 
   while (true) {
     std::cout << "\nsc: ";
@@ -326,6 +331,8 @@ int ConsoleGame::run()
       handleHelp();
     else if (commandString == "print")
       handlePrint();
+    else if (commandString == "fen")
+      handleFen();
     else if (commandString == "perft")
       handlePerft(iss);
     else if (commandString == "table")

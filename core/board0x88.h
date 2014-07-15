@@ -19,58 +19,74 @@ public:
 	~Board0x88(void);
 
 public:
+  uint blackKingIndex() const;
   bool canBlackCastleQueenSide() const;
   bool canBlackCastleKingSide() const;
   bool canWhiteCastleQueenSide() const;
   bool canWhiteCastleKingSide() const;
+  uint enPassantIndex() const;
   bool isBlackChecked() const;
+  bool isBlackToMove() const;
   bool isWhiteChecked() const;
   bool isWhiteToMove() const;
+  uint whiteKingIndex() const;
 
 public:
   uint generateLegalMoves(MoveList & moveList);
   uint generateLegalMoves(uint row, uint col, MoveList & moveList);
   PieceType getPieceType(uint row, uint col) const;
   bool makeMove(const Move & newMove);
+  std::string getFenString() const;
   void setPosition(const std::string & fenString);
   bool unmakeMove(const Move & undoMove);
 
 private:
-  enum Piece {King = 0, Queen, Rook, Bishop, Knight, Pawn, Empty};
   typedef std::vector<PieceType> PieceToPieceType;
   typedef std::vector<Piece> PieceTypeToPiece;
-  typedef std::list<uint> StateList;
+  typedef std::list<ulong> StateList;
 
-private:
+public:
   void generatePawnMoves(uint index, MoveList & moveList);
   void generatePawnCaptures(uint index, MoveList & moveList);
+  uint getKingIndex(uchar kingColor) const;
   uint getIndex(uint row, uint col) const;
   uint getRow(uint index) const;
   uint getCol(uint index) const;
+  void initAttacks();
   void initBoard();
+  void initMoves();
   void initPieceMap();
-  bool isCellAttacked(uint index, Color attackingColor) const;
+  bool isCellAttacked(uint index, uchar attackingColor) const;
   bool isValidSquare(uint index) const;
-  bool leapAttack(uint index, Color attackingColor, Piece pieceType) const;
+  bool leapAttacks(uint index, uchar attackingColor) const;
   void loadState();
-  bool sliderAttack(uint index, Color attackingColor, int attackDirection, bool diag) const;
+  bool sliderAttack(uint index, uchar attackingColor, int attackDirection, bool diag) const;
   void saveState();
 
 public:
   void printColors();
 
-private:
+public:
   bool mBlackChecked;
   bool mWhiteChecked;
+  uchar mSideToMove;
   uint mCastlingRights;
   uint mEnPassantIndex;
   uint mBlackKingIndex;
   uint mWhiteKingIndex;
   uint mHalfMoveClock;
+  uint mFullMoveCounter;
   PieceType mPieceTypes[128];
   Piece mPieces[128];
   uchar mColors[128];
-  uchar mSideToMove;
+  uint mNumKnightAttacks[128];
+  uint mNumKingAttacks[128];
+  uint mNumDiagAttacks[128][4];
+  uint mNumStraightAttacks[128][4];
+  uint mKnightAttacks[128][8];
+  uint mKingAttacks[128][8];
+  uint mStraightAttacks[128][4][8];
+  uint mDiagAttacks[128][4][8];
   PieceToPieceType mWhitePieceMap;
   PieceToPieceType mBlackPieceMap;
   PieceTypeToPiece mPieceMap;

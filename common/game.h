@@ -19,6 +19,9 @@ public:
   ~Game();
 
 public:
+  const Board * board() const;
+
+public:
   bool doMove(const Move & newMove);
   bool executeEngineMove();
   bool generateMoves(uint row, uint col, MoveList & moveList);

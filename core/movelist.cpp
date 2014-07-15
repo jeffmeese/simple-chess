@@ -12,7 +12,7 @@ MoveList::MoveList(uint totalCapacity)
 
 MoveList::~MoveList()
 {
-  delete mMoves;
+  //delete mMoves;
 }
 
 void MoveList::addMove(const Move & newMove)
@@ -57,7 +57,7 @@ void MoveList::init(uint totalCapacity)
 {
   mTotalMoves = 0;
   mTotalCapacity = totalCapacity;
-  mMoves = new Move[totalCapacity];
+  //mMoves = new Move[totalCapacity];
 }
 
 Move & MoveList::moveAt(uint index)

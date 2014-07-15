@@ -11,11 +11,12 @@ CONFIG   += c++11
 CONFIG   -= app_bundle
 TEMPLATE  = app
 TARGET    = sc
+MOC_DIR   = moc
+
+APPNAME = console
 
 include ( ../common.pri)
-
-LIBS += ../lib/libcore.so
-PRE_TARGETDEPS += ../lib/libcore.so
+include (../libs.pri)
 
 SOURCES += main.cpp \
     application.cpp \
@@ -27,7 +28,10 @@ SOURCES += main.cpp \
 HEADERS += \
     application.h \
     perft.h \
+    consolegame.h \
     ../common/board.h \
     ../common/engine.h \
-    consolegame.h \
     ../common/game.h
+
+OTHER_FILES += \
+    ../libs.pri
