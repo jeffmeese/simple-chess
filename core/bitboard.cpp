@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 #define C64(constantU64) constantU64##ULL
 

@@ -32,6 +32,8 @@ private:
 
 private:
   bool mGameOver;
+  sMove mCompletedMoves[256];
+  uchar mTotalMoves;
 };
 
 #endif // #ifndef CONSOLE_GAME_H

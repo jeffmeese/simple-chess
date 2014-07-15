@@ -1101,7 +1101,6 @@ void Board8x8::saveState()
 
 void Board8x8::setPosition(const std::string &fenString)
 {
-  Q_UNUSED(fenString);
 }
 
 void Board8x8::trimCandidateMoves(MoveList & candidateMoves, MoveList & legalMoves)

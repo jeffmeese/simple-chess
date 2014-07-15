@@ -4,7 +4,7 @@
 #include "piecetype.h"
 #include "types.h"
 
-#include <QString>
+#include <string>
 
 //! Encapsulates a chess move
 //!

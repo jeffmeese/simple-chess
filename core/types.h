@@ -8,8 +8,8 @@ typedef unsigned long long ulonglong;
 
 enum Color
 {
-  ColorWhite = 0,
-  ColorBlack,
+  White = 0,
+  Black,
   ColorEmpty
 };
 
@@ -21,7 +21,7 @@ enum Piece
   Bishop,
   Knight,
   Pawn,
-  Empty
+  PieceEmpty
 };
 
 enum Castling

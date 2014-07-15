@@ -1,4 +1,4 @@
-#include "fenparser.h"
+#include "fen.h"
 
 #include <map>
 #include <vector>

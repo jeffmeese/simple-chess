@@ -27,29 +27,22 @@ CONFIG(debug, debug|release) {
 
 SOURCES += \
     move.cpp \
-    movelist.cpp \
     piecetype.cpp \
     stopwatch.cpp \
     stopwatchholder.cpp \
-    board15x12.cpp \
     standardengine.cpp \
-    bitboard.cpp \
     board0x88.cpp \
-    fenparser.cpp \
-    board8x8.cpp
+    fen.cpp
 
 HEADERS +=\
     core_global.h \
     move.h \
-    movelist.h \
     piecetype.h \
     types.h \
     stopwatch.h \
     stopwatchholder.h \
-    board15x12.h \
     stalematecondition.h \
     standardengine.h \
-    bitboard.h \
     board0x88.h \
-    fenparser.h \
-    board8x8.h
+    fen.h \
+    array2d.h

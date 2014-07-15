@@ -40,7 +40,7 @@ private:
 protected:
   std::unique_ptr<Board> mBoard;
   std::unique_ptr<Engine> mEngine;
-  std::unique_ptr<MoveList> mCompletedMoves;
+  //std::unique_ptr<MoveList> mCompletedMoves;
   bool mWhiteMated;
   bool mBlackMated;
 };

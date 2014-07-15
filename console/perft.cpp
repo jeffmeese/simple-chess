@@ -16,34 +16,20 @@ Perft::Perft(Board * board)
 
 void Perft::divide(uint perftDepth)
 {
-  MoveList moveList;
-  uint totalMoves = mBoard->generateLegalMoves(moveList);
-
-  //std::map<std::string, ulonglong> results;
-  //std::vector<std::string> results;
+  sMove moveList[256];
+  uchar totalMoves = mBoard->generateMoves(moveList);
 
   ulonglong totalNodes = 0;
-  for (uint i = 0; i < moveList.totalMoves(); i++) {
-    Move move = moveList[i];
-    mBoard->makeMove(move);
+  for (uint i = 0; i < totalMoves; i++) {
+    mBoard->makeMove(moveList[i]);
     ulonglong nodes = executePerft(perftDepth - 1);
-    mBoard->unmakeMove(move);
+    mBoard->unmakeMove(moveList[i]);
 
     totalNodes += nodes;
 
-    std::string moveString = move.getSmithNotation();
+    std::string moveString = mBoard->getSmithNotation(moveList[i]);
     std::cout << moveString << " " << nodes << "\n";
-    //results.push_back(moveString);
-    //results[moveString] = nodes;
   }
-
-  //for (std::map<std::string, ulonglong>::iterator itr = results.begin(); itr != results.end(); ++itr) {
-  //  std::cout << itr->first << " " << itr->second << "\n";
- // }
-
-  std::cout << "\n";
-  std::cout << "Moves: " << totalMoves << "\n";
-  std::cout << "Nodes: " << totalNodes << "\n";
 }
 
 ulonglong Perft::execute(uint perftDepth)
@@ -57,17 +43,34 @@ ulonglong Perft::executePerft(uint perftDepth)
   if (perftDepth == 0)
     return 1;
 
-  MoveList moveList;
-  uint totalMoves = mBoard->generateLegalMoves(moveList);
+  sMove moveList[256];
+  uchar totalMoves = mBoard->generateMoves(moveList);
 
   uint totalNodes = 0;
-  for (uint i = 0; i < totalMoves; i++) {
-    Move move = moveList[i];
+  for (uchar i = 0; i < totalMoves; i++) {
+    mBoard->makeMove(moveList[i]);
 
-    mBoard->makeMove(move);
-    if (!mBoard->isCellAttacked(mBoard->getKingIndex(!mBoard->mSideToMove), mBoard->mSideToMove))
+    uchar sideToMove = mBoard->sideToMove();
+    uchar kingIndex = mBoard->kingIndex(!sideToMove);
+    if (!mBoard->isCellAttacked(kingIndex, sideToMove))
       totalNodes += executePerft(perftDepth-1);
-    mBoard->unmakeMove(move);
+
+    mBoard->unmakeMove(moveList[i]);
+  }
+
+  return totalNodes;
+
+//  MoveList moveList;
+//  uint totalMoves = mBoard->generateLegalMoves(moveList);
+
+//  uint totalNodes = 0;
+//  for (uint i = 0; i < totalMoves; i++) {
+//    Move move = moveList[i];
+
+//    mBoard->makeMove(move);
+//    if (!mBoard->isCellAttacked(mBoard->getKingIndex(!mBoard->mSideToMove), mBoard->mSideToMove))
+//      totalNodes += executePerft(perftDepth-1);
+//    mBoard->unmakeMove(move);
 
     // Save the table results
     // This will slow down the perft a bit
@@ -96,9 +99,9 @@ ulonglong Perft::executePerft(uint perftDepth)
 //    }
 //    totalNodes += executePerft(perftDepth-1);
 //    mBoard->unmakeMove(move);
-  }
+  //}
 
-  return totalNodes;
+  //return totalNodes;
 }
 
 void Perft::resetCounters()
