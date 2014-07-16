@@ -442,7 +442,7 @@ void ConsoleGame::handleTable(std::istringstream & iss) const
 
 void ConsoleGame::handleTestMoveGen() const
 {
-  std::string fileName("perftsuite.epd");
+  std::string fileName("data/perftsuite.epd");
   std::ifstream inputStream(fileName.c_str());
   if (inputStream.fail()) {
     std::cout << "Could not locate perft test file " << fileName << "\n";
