@@ -36,8 +36,15 @@
     </property>
     <addaction name="actionUndo_Last_Move"/>
    </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>Debug</string>
+    </property>
+    <addaction name="actionSet_Board_Position"/>
+   </widget>
    <addaction name="menuProgram"/>
    <addaction name="menuGame"/>
+   <addaction name="menuDebug"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -61,6 +68,11 @@
   <action name="actionUndo_Last_Move">
    <property name="text">
     <string>Undo Last Move</string>
+   </property>
+  </action>
+  <action name="actionSet_Board_Position">
+   <property name="text">
+    <string>Set Board Position</string>
    </property>
   </action>
  </widget>

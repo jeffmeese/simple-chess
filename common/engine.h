@@ -9,7 +9,7 @@ public:
   Engine();
 
 public:
-  bool getMove(Board * board, Move & engineMove);
+  bool getMove(Board * board, sMove & engineMove);
   int evaluatePosition(Board * board);
 
 private:

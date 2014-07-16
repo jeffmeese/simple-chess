@@ -29,10 +29,12 @@ public:
     QAction *actionStart_New_Game;
     QAction *actionExit;
     QAction *actionUndo_Last_Move;
+    QAction *actionSet_Board_Position;
     QWidget *centralWidget;
     QMenuBar *menuBar;
     QMenu *menuProgram;
     QMenu *menuGame;
+    QMenu *menuDebug;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
@@ -47,6 +49,8 @@ public:
         actionExit->setObjectName(QStringLiteral("actionExit"));
         actionUndo_Last_Move = new QAction(MainWindow);
         actionUndo_Last_Move->setObjectName(QStringLiteral("actionUndo_Last_Move"));
+        actionSet_Board_Position = new QAction(MainWindow);
+        actionSet_Board_Position->setObjectName(QStringLiteral("actionSet_Board_Position"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         MainWindow->setCentralWidget(centralWidget);
@@ -57,6 +61,8 @@ public:
         menuProgram->setObjectName(QStringLiteral("menuProgram"));
         menuGame = new QMenu(menuBar);
         menuGame->setObjectName(QStringLiteral("menuGame"));
+        menuDebug = new QMenu(menuBar);
+        menuDebug->setObjectName(QStringLiteral("menuDebug"));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -67,9 +73,11 @@ public:
 
         menuBar->addAction(menuProgram->menuAction());
         menuBar->addAction(menuGame->menuAction());
+        menuBar->addAction(menuDebug->menuAction());
         menuProgram->addAction(actionStart_New_Game);
         menuProgram->addAction(actionExit);
         menuGame->addAction(actionUndo_Last_Move);
+        menuDebug->addAction(actionSet_Board_Position);
 
         retranslateUi(MainWindow);
 
@@ -82,8 +90,10 @@ public:
         actionStart_New_Game->setText(QApplication::translate("MainWindow", "Start New Game", 0));
         actionExit->setText(QApplication::translate("MainWindow", "Exit", 0));
         actionUndo_Last_Move->setText(QApplication::translate("MainWindow", "Undo Last Move", 0));
+        actionSet_Board_Position->setText(QApplication::translate("MainWindow", "Set Board Position", 0));
         menuProgram->setTitle(QApplication::translate("MainWindow", "Program", 0));
         menuGame->setTitle(QApplication::translate("MainWindow", "Game", 0));
+        menuDebug->setTitle(QApplication::translate("MainWindow", "Debug", 0));
     } // retranslateUi
 
 };

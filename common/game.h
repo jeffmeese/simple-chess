@@ -22,15 +22,14 @@ public:
   const Board * board() const;
 
 public:
-  bool doMove(const Move & newMove);
+  bool doMove(const sMove & newMove);
   bool executeEngineMove();
-  bool generateMoves(uint row, uint col, MoveList & moveList);
-  PieceType getPieceType(uint row, uint col) const;
+  uchar generateMoves(uchar row, uchar col, sMove * moves);
   bool isBlackMated() const;
   bool isStalemate() const;
   bool isWhiteMated() const;
   bool isWhiteToMove() const;
-  void setBoardPosition(const std::string & fenString);
+  bool setBoardPosition(const std::string & fenString);
   void startNewGame();
   bool undoLastMove();
 
@@ -40,9 +39,11 @@ private:
 protected:
   std::unique_ptr<Board> mBoard;
   std::unique_ptr<Engine> mEngine;
-  //std::unique_ptr<MoveList> mCompletedMoves;
   bool mWhiteMated;
   bool mBlackMated;
+  bool mGameOver;
+  sMove mCompletedMoves[256];
+  uchar mTotalCompletedMoves;
 };
 
 #endif // GAME_H

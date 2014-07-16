@@ -17,23 +17,22 @@ public:
   int run();
 
 private:
+  void handleDivide(std::istringstream & iss) const;
+  void handleFen() const;
   void handleHelp() const;
   void handleMove(std::istringstream & iss);
-  void handleDivide(std::istringstream & iss) const;
-  void handlePerft(std::istringstream & iss) const;
-  void handleTable(std::istringstream & iss) const;
   void handleNewGame();
+  void handlePerft(std::istringstream & iss) const;
   void handlePrint() const;
-  void handleFen() const;
   void handleSetBoard(std::istringstream & iss);
   void handleShow() const;
+  void handleTable(std::istringstream & iss) const;
+  void handleTestMoveGen() const;
   void handleUndo();
   bool isGameOver();
 
 private:
   bool mGameOver;
-  sMove mCompletedMoves[256];
-  uchar mTotalMoves;
 };
 
 #endif // #ifndef CONSOLE_GAME_H

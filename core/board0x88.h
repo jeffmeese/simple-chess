@@ -11,28 +11,13 @@
 #include <vector>
 #include <list>
 
+//#define USEMACROS
+#ifdef USEMACROS
 #define getIndex(row,col) ((row)*16+(col))
 #define getRow(index) ( (index >> 4) )
 #define getCol(index) ( (index & 7) )
 #define isValidSquare(x)  ( (x) & 0x88 ) ? (0) : (1)
-
-class Board0x88;
-
-class sMove
-{
-  friend class Board0x88;
-
-public:
-  uchar fromSquare;
-  uchar toSquare;
-  uchar halfMove;
-  uchar epIndex;
-  uchar fromPiece;
-  uchar toPiece;
-  uchar capturedPiece;
-  uchar castlingRights;
-  uchar flags;
-};
+#endif // #ifdef USEMACROS
 
 class Board0x88
 {
@@ -49,44 +34,45 @@ public:
   int enPassantRow() const;
   int fullMoveCounter() const;
   int halfMoveClock() const;
+  bool isWhiteToMove() const;
   uchar sideToMove() const;
 
 public:
   uchar generateMoves(sMove * moveList);
+  uchar generateMoves(uchar row, uchar col, sMove * moveList);
   std::string getSmithNotation(const sMove & move) const;
-  //uchar getCol(uchar index) const;
-  //uchar getIndex(uchar row, uchar col) const;
-  //uchar getRow(uchar index) const;
-  bool isCellAttacked(uchar index, uchar attackingColor) const;
-  uchar kingIndex(uchar color) const;
+  uchar getMoveDestinationCol(const sMove & move) const;
+  uchar getMoveDestinationRow(const sMove & move) const;
+  uchar getMoveSourceCol(const sMove & move) const;
+  uchar getMoveSourceRow(const sMove & move) const;
+  bool isKingAttacked(uchar kingColor) const;
+  bool isCellAttacked(uchar row, uchar col, uchar attackingColor) const;
+  uchar kingRow(uchar color) const;
+  uchar kingCol(uchar color) const;
   void makeMove(const sMove & newMove);
+  bool setPosition(const std::string & fenString);
   void unmakeMove(const sMove & undoMove);
-  //uchar generateMoves(uchar row, uchar col, MoveList & moveList);
   PieceType pieceType(uchar row, uchar col) const;
 
 private:
-  enum MoveFlags
-  {
-    MoveNormal = 0,
-    MoveCapture = 1,
-    MoveEpCapture = 2,
-    MoveCastle = 4,
-    MoveEp = 8,
-    MovePromotion = 16,
-    MoveNull = 32
-  };
-
-private:
+  void generateCastlingMoves();
   void generatePawnCaptures(uchar index);
   void generatePawnMoves(uchar index);
   void initAttacks();
   void initBoard();
-  //bool isValidSquare(uchar index) const;
+  bool isCellAttacked(uchar index, uchar attackingColor) const;
+  uchar kingIndex(uchar color) const;
   void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, uchar flags);
+
+#ifndef USEMACROS
+  uchar getCol(uchar index) const;
+  uchar getIndex(uchar row, uchar col) const;
+  uchar getRow(uchar index) const;
+  bool isValidSquare(uchar index) const;
+#endif // #ifndef USEMACROS
 
 private:
   uchar mSideToMove;
-  uchar mMoveCount;
   uchar mCastlingRights;
   uchar mHalfMoveClock;
   uchar mFullMoveCounter;
@@ -105,119 +91,128 @@ private:
   Array2D<uchar> mStraightAttacks[4];
   Array2D<uchar> mDiagAttacks[4];
   Array2D<uchar> mDirectionVectors;
-  sMove * mMoves;
+  mutable uchar mMoveCount;
+  mutable sMove * mMoves;
 };
 
-//class Board0x88
-//{
-//public:
-//	Board0x88(void);
-//	~Board0x88(void);
+//////////////////////////////////////////////////////////////
+/// Inline functions
 
-//public:
-////  uint blackKingIndex() const;
-////  bool canBlackCastleQueenSide() const;
-////  bool canBlackCastleKingSide() const;
-////  bool canWhiteCastleQueenSide() const;
-////  bool canWhiteCastleKingSide() const;
-////  uint enPassantIndex() const;
-////  bool isBlackChecked() const;
-////  bool isBlackToMove() const;
-////  bool isWhiteChecked() const;
-////  bool isWhiteToMove() const;
-////  uint whiteKingIndex() const;
+inline bool Board0x88::canBlackCastleQueenSide() const
+{
+  return (mCastlingRights & CastleBlackQueen);
+}
 
-//public:
-////  uint generateLegalMoves(MoveList & moveList);
-////  uint generateLegalMoves(uint row, uint col, MoveList & moveList);
-////  PieceType getPieceType(uint row, uint col) const;
-////  bool makeMove(const Move & newMove);
-////  std::string getFenString() const;
-////  void setPosition(const std::string & fenString);
-////  bool unmakeMove(const Move & undoMove);
+inline bool Board0x88::canBlackCastleKingSide() const
+{
+  return (mCastlingRights & CastleBlackKing);
+}
 
-//private:
-//  struct sMove
-//  {
-//    uchar fromSquare;
-//    uchar toSquare;
-//    uchar halfMove;
-//    uchar epIndex;
-//    uchar fromPiece;
-//    uchar toPiece;
-//    uchar capturedPiece;
-//    uchar castlingRights;
-//    uchar flags;
-//  };
+inline bool Board0x88::canWhiteCastleQueenSide() const
+{
+  return (mCastlingRights & CastleWhiteQueen);
+}
 
-//  enum MoveFlags
-//  {
-//    MoveNormal = 0,
-//    MoveCapture = 1,
-//    MoveEpCapture = 2,
-//    MoveCastle = 4,
-//    MoveEp = 8,
-//    MovePromotion = 16,
-//    MoveNull = 32
-//  };
+inline bool Board0x88::canWhiteCastleKingSide() const
+{
+  return (mCastlingRights & CastleWhiteKing);
+}
 
-//private:
-//  //typedef std::vector<PieceType> PieceToPieceType;
-//  //typedef std::vector<Piece> PieceTypeToPiece;
-//  //typedef std::list<ulong> StateList;
+inline int Board0x88::enPassantCol() const
+{
+  return ( (mEpIndex == 0x7f) ? -1 : getCol(mEpIndex) );
+}
 
-//private:
-//  void pawnMoves(uchar index);
-//  void pawnCaptures(uint index);
-//  void pushMove(uchar from, uchar to, uchar pieceFrom, uchar pieceTo, uchar pieceCapture, uchar flags);
-//  //void generatePawnMoves(uint index, MoveList & moveList);
-//  //void generatePawnCaptures(uint index, MoveList & moveList);
-//  //uint getKingIndex(uchar kingColor) const;
-//  //uint getIndex(uint row, uint col) const;
-//  //uint getRow(uint index) const;
-//  //uint getCol(uint index) const;
-//  //void initAttacks();
-//  //void initBoard();
-//  //void initMoves();
-//  //void initPieceMap();
-//  //bool isCellAttacked(uint index, uchar attackingColor) const;
-//  //bool isValidSquare(uint index) const;
-//  //bool leapAttacks(uint index, uchar attackingColor) const;
-//  //void loadState();
-//  //void printColors();
-//  //void pawnMoves(uchar index);
-//  //bool sliderAttack(uint index, uchar attackingColor, int attackDirection, bool diag) const;
-//  //void saveState();
+inline int Board0x88::enPassantRow() const
+{
+  return ( (mEpIndex == 0x7f) ? -1 : getRow(mEpIndex) );
+}
 
-//public:
-//  smove mMoves[256];
-//  uint mMoveCount;
-////  bool mBlackChecked;
-////  bool mWhiteChecked;
-////  uchar mSideToMove;
-////  uint mCastlingRights;
-////  uint mEnPassantIndex;
-////  uint mBlackKingIndex;
-////  uint mWhiteKingIndex;
-////  uint mHalfMoveClock;
-////  uint mFullMoveCounter;
-////  PieceType mPieceTypes[128];
-////  Piece mPieces[128];
-////  uchar mColors[128];
-////  uint mNumKnightAttacks[128];
-////  uint mNumKingAttacks[128];
-////  uint mNumDiagAttacks[128][4];
-////  uint mNumStraightAttacks[128][4];
-////  uint mKnightAttacks[128][8];
-////  uint mKingAttacks[128][8];
-////  uint mStraightAttacks[128][4][8];
-////  uint mDiagAttacks[128][4][8];
-////  PieceToPieceType mWhitePieceMap;
-////  PieceToPieceType mBlackPieceMap;
-////  PieceTypeToPiece mPieceMap;
-////  StateList mSavedStates;
-////  smove mMoves[256];
-////  uint mMoveCounter;
-//};
+inline int Board0x88::fullMoveCounter() const
+{
+  return mFullMoveCounter;
+}
+
+#ifndef USEMACROS
+inline uchar Board0x88::getCol(uchar index) const
+{
+  return (index & 7);
+}
+
+inline uchar Board0x88::getIndex(uchar row, uchar col) const
+{
+  return (row * 16 + col);
+}
+
+inline uchar Board0x88::getRow(uchar index) const
+{
+  return (index >> 4);
+}
+
+inline bool Board0x88::isValidSquare(uchar index) const
+{
+  return !(index & 0x88);
+}
+#endif // #ifndef USEMACROS
+
+inline uchar Board0x88::getMoveDestinationCol(const sMove & move) const
+{
+  return getCol(move.toSquare);
+}
+
+inline uchar Board0x88::getMoveDestinationRow(const sMove & move) const
+{
+  return getRow(move.toSquare);
+}
+
+inline uchar Board0x88::getMoveSourceCol(const sMove & move) const
+{
+  return getCol(move.fromSquare);
+}
+
+inline uchar Board0x88::getMoveSourceRow(const sMove & move) const
+{
+  return getRow(move.fromSquare);
+}
+
+inline int Board0x88::halfMoveClock() const
+{
+  return mHalfMoveClock;
+}
+
+inline bool Board0x88::isCellAttacked(uchar row, uchar col, uchar attackingColor) const
+{
+  return isCellAttacked(getIndex(row, col), attackingColor);
+}
+
+inline bool Board0x88::isKingAttacked(uchar kingColor) const
+{
+  return isCellAttacked(kingIndex(kingColor), !kingColor);
+}
+
+inline uchar Board0x88::kingRow(uchar color) const
+{
+  return getRow(kingIndex(color));
+}
+
+inline uchar Board0x88::kingIndex(uchar color) const
+{
+  return mKingIndex[color];
+}
+
+inline uchar Board0x88::kingCol(uchar color) const
+{
+  return getCol(kingIndex(color));
+}
+
+inline bool Board0x88::isWhiteToMove() const
+{
+  return (mSideToMove == White);
+}
+
+inline uchar Board0x88::sideToMove() const
+{
+  return mSideToMove;
+}
 
 #endif // #ifndef BOARD0X88_H

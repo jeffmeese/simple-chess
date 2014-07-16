@@ -8,7 +8,7 @@
 #include <map>
 
 Perft::Perft(Board * board)
-  : mBoard(board)//mBoard(new Board)
+  : mBoard(board)
   , mSaveTableResults(false)
 {
   resetCounters();
@@ -17,19 +17,25 @@ Perft::Perft(Board * board)
 void Perft::divide(uint perftDepth)
 {
   sMove moveList[256];
-  uchar totalMoves = mBoard->generateMoves(moveList);
+  uint totalMoves = mBoard->generateMoves(moveList);
 
+  uint validMoves = 0;
   ulonglong totalNodes = 0;
   for (uint i = 0; i < totalMoves; i++) {
     mBoard->makeMove(moveList[i]);
-    ulonglong nodes = executePerft(perftDepth - 1);
+    if (!mBoard->isKingAttacked(!mBoard->sideToMove())) {
+      ulonglong nodes = executePerft(perftDepth - 1);
+
+      std::string moveString = mBoard->getSmithNotation(moveList[i]);
+      std::cout << moveString << " " << nodes << "\n";
+
+      totalNodes += nodes;
+      validMoves++;
+    }
     mBoard->unmakeMove(moveList[i]);
-
-    totalNodes += nodes;
-
-    std::string moveString = mBoard->getSmithNotation(moveList[i]);
-    std::cout << moveString << " " << nodes << "\n";
   }
+  std::cout << "Moves: " << validMoves << "\n";
+  std::cout << "Nodes: " << totalNodes << "\n";
 }
 
 ulonglong Perft::execute(uint perftDepth)
@@ -49,12 +55,8 @@ ulonglong Perft::executePerft(uint perftDepth)
   uint totalNodes = 0;
   for (uchar i = 0; i < totalMoves; i++) {
     mBoard->makeMove(moveList[i]);
-
-    uchar sideToMove = mBoard->sideToMove();
-    uchar kingIndex = mBoard->kingIndex(!sideToMove);
-    if (!mBoard->isCellAttacked(kingIndex, sideToMove))
+    if (!mBoard->isKingAttacked(!mBoard->sideToMove()))
       totalNodes += executePerft(perftDepth-1);
-
     mBoard->unmakeMove(moveList[i]);
   }
 
@@ -123,7 +125,6 @@ void Perft::setSaveTableResults(bool saveResults)
 {
   mSaveTableResults = saveResults;
 }
-
 
 ulonglong Perft::totalCaptures() const
 {

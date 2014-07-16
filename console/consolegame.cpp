@@ -2,12 +2,14 @@
 #include "perft.h"
 
 #include <core/stopwatch.h>
+#include <core/util.h>
 
 #include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <memory>
 #include <iomanip>
+#include <fstream>
 
 ConsoleGame::ConsoleGame()
 {
@@ -30,6 +32,7 @@ void ConsoleGame::handleHelp() const
   std::cout << "divide <level>.......Displays the number of child moves\n";
   std::cout << "table <level>........Displays a table of all perft results from 1 to <level>\n";
   std::cout << "setboard <fen>.......Sets the board position to <fen>\n";
+  std::cout << "testmovegen..........Tests the move generator\n";
   std::cout << "undo.................Undoes the last move\n";
 }
 
@@ -89,10 +92,10 @@ void ConsoleGame::handleMove(std::istringstream & iss)
   sMove moveList[256];
   uchar totalMoves = mBoard->generateMoves(moveList);
   for (uchar i = 0; i < totalMoves; i++) {
-    uchar sourceRow = getRow(moveList[i].fromSquare);
-    uchar sourceCol = getCol(moveList[i].fromSquare);
-    uchar destRow = getRow(moveList[i].toSquare);
-    uchar destCol = getCol(moveList[i].toSquare);
+    uchar sourceRow = mBoard->getMoveSourceRow(moveList[i]);
+    uchar sourceCol = mBoard->getMoveSourceCol(moveList[i]);
+    uchar destRow = mBoard->getMoveDestinationRow(moveList[i]);
+    uchar destCol = mBoard->getMoveDestinationCol(moveList[i]);
 
     if (srcRow == sourceRow && dstRow == destRow && srcCol == sourceCol && dstCol == destCol) {
       moveIndex = i;
@@ -109,9 +112,17 @@ void ConsoleGame::handleMove(std::istringstream & iss)
     return;
   }
 
-  mBoard->makeMove(moveList[moveIndex]);
-  mCompletedMoves[mTotalMoves] = moveList[moveIndex];
-  ++mTotalMoves;
+  doMove(moveList[moveIndex]);
+  mGameOver = isGameOver();
+  if (mGameOver)
+    return;
+
+  executeEngineMove();
+  mGameOver = isGameOver();
+
+  //mBoard->makeMove(moveList[moveIndex]);
+  //mCompletedMoves[mTotalMoves] = moveList[moveIndex];
+  //++mTotalMoves;
   //mGameOver = isGameOver();
 
   //std::cout << srcRow << " " << srcCol << "\n";
@@ -242,44 +253,44 @@ void ConsoleGame::handleFen() const
 
   oss << " " << castleString;
 
-  std::string epString;
+  std::ostringstream epString;
   int epRow = mBoard->enPassantRow();
   int epCol = mBoard->enPassantCol();
   if (epRow >= 0 && epCol >= 0) {
     switch (epCol)
     {
     case 0:
-      epString += "a";
+      epString << "a";
       break;
     case 1:
-      epString += "b";
+      epString << "b";
       break;
     case 2:
-      epString +="c";
+      epString << "c";
       break;
     case 3:
-      epString += "d";
+      epString << "d";
       break;
     case 4:
-      epString += "e";
+      epString << "e";
       break;
     case 5:
-      epString += "f";
+      epString << "f";
       break;
     case 6:
-      epString += "g";
+      epString << "g";
       break;
     case 7:
-      epString += "h";
+      epString << "h";
       break;
     }
-    epString += epRow + 1;
+    epString << (epRow + 1);
   }
 
-  if (epString.empty())
-    epString += "-";
+  if (epString.str().empty())
+    epString << "-";
 
-  oss << " " << epString;
+  oss << " " << epString.str();
   oss << " " << mBoard->halfMoveClock();
   oss << " " << mBoard->fullMoveCounter();
 
@@ -312,63 +323,6 @@ void ConsoleGame::handleShow() const
   uchar totalMoves = mBoard->generateMoves(moveList);
   for (uchar i = 0; i < totalMoves; i++)
     std::cout << mBoard->getSmithNotation(moveList[i]) << "\n";
-
-//  std::vector<std::string> moves;
-//  MoveList moveList;
-//  mBoard->generateLegalMoves(moveList);
-//  for (uint i = 0; i < moveList.totalMoves(); i++)
-//    moves.push_back(moveList[i].getSmithNotation());
-
-//  std::sort(moves.begin(), moves.end());
-//  for (uint i = 0; i < moves.size(); i++)
-//    std::cout << moves[i] << "\n";
-}
-
-void ConsoleGame::handleTable(std::istringstream & iss) const
-{
-//  uint perftLevel = readLevel(iss);
-//  if (perftLevel == 0)
-//    return;
-
-//  std::cout << std::setw(15) << std::left << "Depth";
-//  std::cout << std::setw(15) << std::left << "Nodes";
-//  std::cout << std::setw(15) << std::left << "Captures";
-//  std::cout << std::setw(15) << std::left << "EnPassants";
-//  std::cout << std::setw(15) << std::left << "Castles";
-//  std::cout << std::setw(15) << std::left << "Promotions";
-//  std::cout << std::setw(15) << std::left << "Checks";
-//  std::cout << std::setw(15) << std::left << "Checkmates";
-//  std::cout << std::endl;
-
-//  uint totalCaptures = 0, totalEnPassants = 0, totalCastles = 0;
-//  uint totalPromotions = 0, totalChecks = 0, totalCheckmates = 0;
-
-//  Stopwatch stopWatch(true);
-//  for (uint i = 1; i <= perftLevel; i++) {
-//    Perft perft(mBoard.get());
-//    perft.setSaveTableResults(true);
-//    ulonglong totalNodes = perft.execute(i);
-
-//    std::cout << std::setw(15) << std::left << i;
-//    std::cout << std::setw(15) << std::left << totalNodes;
-//    std::cout << std::setw(15) << std::left << perft.totalCaptures() - totalCaptures;
-//    std::cout << std::setw(15) << std::left << perft.totalEnpassants() - totalEnPassants;
-//    std::cout << std::setw(15) << std::left << perft.totalCastles() - totalCastles;
-//    std::cout << std::setw(15) << std::left << perft.totalPromotions() - totalPromotions;
-//    std::cout << std::setw(15) << std::left << perft.totalChecks() - totalChecks;
-//    std::cout << std::setw(15) << std::left << perft.totalCheckmates() - totalCheckmates;
-//    std::cout << std::endl;
-
-//    totalCaptures = perft.totalCaptures();
-//    totalEnPassants = perft.totalEnpassants();
-//    totalCastles = perft.totalCastles();
-//    totalPromotions = perft.totalPromotions();
-//    totalChecks = perft.totalChecks() + perft.totalCheckmates();
-//    totalCheckmates = perft.totalCheckmates();
-//  }
-
-//  std::string timeString = stopWatch.timeElapsedString();
-//  std::cout << "Time: " << timeString << "\n";
 }
 
 void ConsoleGame::handlePrint() const
@@ -427,62 +381,156 @@ void ConsoleGame::handlePrint() const
 
 void ConsoleGame::handleSetBoard(std::istringstream & iss)
 {
-//  std::string fenString;
-//  std::getline(iss, fenString);
-//  if (fenString.empty()) {
-//    std::cout << "A fen string must be provided\n";
+  std::string fenString;
+  std::getline(iss, fenString);
+  if (fenString.empty()) {
+    std::cout << "A fen string must be provided\n";
+    return;
+  }
+
+  // Set the position of the board
+  if (setBoardPosition(fenString))
+    mTotalCompletedMoves = 0; // Disable undo
+}
+
+void ConsoleGame::handleTable(std::istringstream & iss) const
+{
+//  uint perftLevel = readLevel(iss);
+//  if (perftLevel == 0)
 //    return;
+
+//  std::cout << std::setw(15) << std::left << "Depth";
+//  std::cout << std::setw(15) << std::left << "Nodes";
+//  std::cout << std::setw(15) << std::left << "Captures";
+//  std::cout << std::setw(15) << std::left << "EnPassants";
+//  std::cout << std::setw(15) << std::left << "Castles";
+//  std::cout << std::setw(15) << std::left << "Promotions";
+//  std::cout << std::setw(15) << std::left << "Checks";
+//  std::cout << std::setw(15) << std::left << "Checkmates";
+//  std::cout << std::endl;
+
+//  uint totalCaptures = 0, totalEnPassants = 0, totalCastles = 0;
+//  uint totalPromotions = 0, totalChecks = 0, totalCheckmates = 0;
+
+//  Stopwatch stopWatch(true);
+//  for (uint i = 1; i <= perftLevel; i++) {
+//    Perft perft(mBoard.get());
+//    perft.setSaveTableResults(true);
+//    ulonglong totalNodes = perft.execute(i);
+
+//    std::cout << std::setw(15) << std::left << i;
+//    std::cout << std::setw(15) << std::left << totalNodes;
+//    std::cout << std::setw(15) << std::left << perft.totalCaptures() - totalCaptures;
+//    std::cout << std::setw(15) << std::left << perft.totalEnpassants() - totalEnPassants;
+//    std::cout << std::setw(15) << std::left << perft.totalCastles() - totalCastles;
+//    std::cout << std::setw(15) << std::left << perft.totalPromotions() - totalPromotions;
+//    std::cout << std::setw(15) << std::left << perft.totalChecks() - totalChecks;
+//    std::cout << std::setw(15) << std::left << perft.totalCheckmates() - totalCheckmates;
+//    std::cout << std::endl;
+
+//    totalCaptures = perft.totalCaptures();
+//    totalEnPassants = perft.totalEnpassants();
+//    totalCastles = perft.totalCastles();
+//    totalPromotions = perft.totalPromotions();
+//    totalChecks = perft.totalChecks() + perft.totalCheckmates();
+//    totalCheckmates = perft.totalCheckmates();
 //  }
 
-//  setBoardPosition(fenString);
+//  std::string timeString = stopWatch.timeElapsedString();
+//  std::cout << "Time: " << timeString << "\n";
+}
+
+void ConsoleGame::handleTestMoveGen() const
+{
+  std::string fileName("perftsuite.epd");
+  std::ifstream inputStream(fileName.c_str());
+  if (inputStream.fail()) {
+    std::cout << "Could not locate perft test file " << fileName << "\n";
+    return;
+  }
+
+  while (true) {
+    std::string inputLine;
+    std::getline(inputStream, inputLine);
+    if (inputStream.fail())
+      break;
+
+    std::vector<std::string> tokens;
+    util::split(tokens, inputLine, ';');
+    if (tokens.size() < 1)
+      continue;
+
+    std::string fenString = tokens.at(0);
+    if (tokens.size() > 1) {
+      std::cout << "fen: " << fenString << "\n";
+      mBoard->setPosition(fenString);
+    }
+
+    for (uint i = 1; i < tokens.size(); i++) {
+      std::string perftDepthString = tokens.at(i);
+
+      std::vector<std::string> perftTokens;
+      util::split(perftTokens, perftDepthString, ' ');
+      if (perftTokens.size() < 2)
+        continue;
+
+      std::string depthString = perftTokens.at(0);
+      std::string nodesString = perftTokens.at(1);
+
+      uint depthLevel = atoi(depthString.substr(1).c_str());
+      uint numNodes = atoi(nodesString.c_str());
+
+      Stopwatch stopWatch;
+      Perft perft(mBoard.get());
+
+      stopWatch.start();
+      ulonglong totalNodes = perft.execute(depthLevel);
+      std::string timeString = stopWatch.timeElapsedString();
+
+      bool success = (totalNodes == numNodes);
+      std::cout << "Perft (" << depthLevel << "): " << totalNodes << " nodes, ";
+      std::cout << "Time: " << timeString << " s, [" << numNodes << "], ";
+      std::cout << (success ? "OK" : "FAIL") << "\n";
+
+      if (!success)
+        return;
+    }
+  }
 }
 
 void ConsoleGame::handleUndo()
 {
-  if (mTotalMoves == 0)
-    return;
-
-  sMove move = mCompletedMoves[mTotalMoves-1];
-  mBoard->unmakeMove(move);
-  --mTotalMoves;
-
-  //if (mCompletedMoves->totalMoves() == 0) {
-//    std::cout << "Nothing to undo!\n";
-//    return;
-//  }
-
-//  undoLastMove();
-//  mGameOver = isGameOver();
+  undoLastMove();
 }
 
 bool ConsoleGame::isGameOver()
 {
   bool gameOver = false;
 
-//  if (isBlackMated()) {
-//    std::cout << "Checkmate. White wins\n";
-//    gameOver = true;
-//  }
+  if (isBlackMated()) {
+    std::cout << "Checkmate. White wins\n";
+    gameOver = true;
+  }
 
-//  if (isWhiteMated()) {
-//    std::cout << "Checkmate. Black wins\n";
-//    gameOver = true;
-//  }
+  if (isWhiteMated()) {
+    std::cout << "Checkmate. Black wins\n";
+    gameOver = true;
+  }
 
-//  if (isStalemate()) {
-//    std::cout << "Stalemate\n";
-//    gameOver = true;
-//  }
+  if (isStalemate()) {
+    std::cout << "Stalemate\n";
+    gameOver = true;
+  }
 
   return gameOver;
 }
 
 int ConsoleGame::run()
 {
-  std::string cmdString("5");
-  std::istringstream iss(cmdString);
-  handlePerft(iss);
-  return 0;
+//  std::string cmdString("5");
+//  std::istringstream iss(cmdString);
+//  handlePerft(iss);
+//  return 0;
 
   while (true) {
     std::cout << "\nsc: ";
@@ -514,8 +562,10 @@ int ConsoleGame::run()
 //      handleTable(iss);
     else if (commandString == "move")
       handleMove(iss);
-//    else if (commandString == "setboard")
-//      handleSetBoard(iss);
+    else if (commandString == "setboard")
+      handleSetBoard(iss);
+    else if (commandString == "testmovegen")
+      handleTestMoveGen();
     else if (commandString == "new")
       handleNewGame();
     else if (commandString == "show")

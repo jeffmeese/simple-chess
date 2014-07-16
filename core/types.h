@@ -32,4 +32,28 @@ enum Castling
   CastleBlackQueen = 0x0008
 };
 
+struct sMove
+{
+  uchar fromSquare;
+  uchar toSquare;
+  uchar halfMove;
+  uchar epIndex;
+  uchar fromPiece;
+  uchar toPiece;
+  uchar capturedPiece;
+  uchar castlingRights;
+  uchar flags;
+};
+
+enum MoveFlags
+{
+  MoveNormal = 0,
+  MoveCapture = 1,
+  MoveEpCapture = 2,
+  MoveCastle = 4,
+  MoveEp = 8,
+  MovePromotion = 16,
+  MoveNull = 32
+};
+
 #endif // TYPES_H

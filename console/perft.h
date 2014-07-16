@@ -37,7 +37,6 @@ private:
 
 private:
   Board * mBoard;
-  //std::unique_ptr<Board> mBoard;
   bool mSaveTableResults;
   ulonglong mTotalCaptures;
   ulonglong mTotalCastles;

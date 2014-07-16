@@ -7,10 +7,10 @@
 
 Game::Game()
   : mBoard(new Board)
-//  , mEngine(new Engine)
-//  , mCompletedMoves(new MoveList)
+  , mEngine(new Engine)
   , mWhiteMated(false)
   , mBlackMated(false)
+  , mTotalCompletedMoves(0)
 {
 }
 
@@ -25,57 +25,75 @@ const Board * Game::board() const
 
 void Game::checkMateCondition()
 {
-  //mBlackMated = mWhiteMated = false;
+  mBlackMated = mWhiteMated = false;
 
-//  MoveList moveList;
-//  uint totalMoves = mBoard->generateLegalMoves(moveList);
+  sMove moveList[256];
+  uchar totalMoves = mBoard->generateMoves(moveList);
+
+  if (isWhiteToMove()) {
+    mWhiteMated = true;
+    for (uchar i = 0; i < totalMoves; i++) {
+      mBoard->makeMove(moveList[i]);
+      if (!mBoard->isKingAttacked(White)) {
+        mWhiteMated = false;
+        mBoard->unmakeMove(moveList[i]);
+        break;
+      }
+      mBoard->unmakeMove(moveList[i]);
+    }
+  }
+  else {
+    mBlackMated = true;
+    for (uchar i = 0; i < totalMoves; i++) {
+      mBoard->makeMove(moveList[i]);
+      if (!mBoard->isKingAttacked(Black)) {
+        mBlackMated = false;
+        mBoard->unmakeMove(moveList[i]);
+        break;
+      }
+      mBoard->unmakeMove(moveList[i]);
+    }
+  }
+
 //  if (totalMoves == 0) {
-
-//    if (mBoard->isWhiteToMove() && mBoard->isWhiteChecked())
+//    if (isWhiteToMove() && mBoard->isKingAttacked(White))
 //      mWhiteMated = true;
 
-//    if (!mBoard->isWhiteToMove() && mBoard->isBlackChecked())
+//    if (!isWhiteToMove() && mBoard->isKingAttacked(Black))
 //      mBlackMated = true;
 //  }
+
+  mGameOver = (mBlackMated || mWhiteMated);
 }
 
-bool Game::doMove(const Move & newMove)
+bool Game::doMove(const sMove &newMove)
 {
-  //mBoard->makeMove(newMove);
-  //mCompletedMoves->addMove(newMove);
-  //checkMateCondition();
+  mBoard->makeMove(newMove);
+  mCompletedMoves[mTotalCompletedMoves] = newMove;
+  mTotalCompletedMoves++;
 
-  return true;
+  checkMateCondition();
 }
 
 bool Game::executeEngineMove()
 {
-//  Move engineMove;
+  sMove engineMove;
+  bool validMove = mEngine->getMove(mBoard.get(), engineMove);
+  if (!validMove)
+    return false;
 
-//  bool validMove = mEngine->getMove(mBoard.get(), engineMove);
-//  if (!validMove)
-//    return false;
-
-//  doMove(engineMove);
+  doMove(engineMove);
   return true;
 }
 
-bool Game::generateMoves(uint row, uint col, MoveList & moveList)
+uchar Game::generateMoves(uchar row, uchar col, sMove * moveList)
 {
-  //mBoard->generateLegalMoves(row, col, moveList);
-  return true;
-}
-
-PieceType Game::getPieceType(uint row, uint col) const
-{
-  return NoPiece;
-  //return mBoard->getPieceType(row, col);
+  return mBoard->generateMoves(row, col, moveList);
 }
 
 bool Game::isBlackMated() const
 {
-  return false;
-  //return mBlackMated;
+  return mBlackMated;
 }
 
 bool Game::isStalemate() const
@@ -85,38 +103,34 @@ bool Game::isStalemate() const
 
 bool Game::isWhiteMated() const
 {
-  return false;
-  //return mWhiteMated;
+  return mWhiteMated;
 }
 
 bool Game::isWhiteToMove() const
 {
-  return true;
-  //return mBoard->isWhiteToMove();
+  return (mBoard->sideToMove() == White);
 }
 
-void Game::setBoardPosition(const std::string &fenString)
+bool Game::setBoardPosition(const std::string &fenString)
 {
-  //mBoard->setPosition(fenString);
+  return mBoard->setPosition(fenString);
 }
 
 void Game::startNewGame()
 {
   mBoard.reset(new Board);
-  //mCompletedMoves->clearMoves();
+  mTotalCompletedMoves = 0;
 }
 
 bool Game::undoLastMove()
 {
-//  uint totalMoves = mCompletedMoves->totalMoves();
-//  if (totalMoves == 0)
-//    return false;
+  if (mTotalCompletedMoves == 0)
+    return false;
 
-//  Move move = mCompletedMoves->moveAt(totalMoves-1);
-//  mBoard->unmakeMove(move);
+  sMove move = mCompletedMoves[mTotalCompletedMoves-1];
+  mBoard->unmakeMove(move);
+  mTotalCompletedMoves--;
 
-//  mCompletedMoves->deleteMove(totalMoves-1);
-//  checkMateCondition();
-
+  checkMateCondition();
   return true;
 }

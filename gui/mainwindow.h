@@ -23,6 +23,7 @@ public:
 
 private Q_SLOTS:
   void handleMoveCompleted();
+  void handleSetBoardPosition();
   void handleStartNewGame();
   void handleUndoLastMove();
 

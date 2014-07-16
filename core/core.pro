@@ -32,7 +32,8 @@ SOURCES += \
     stopwatchholder.cpp \
     standardengine.cpp \
     board0x88.cpp \
-    fen.cpp
+    fen.cpp \
+    util.cpp
 
 HEADERS +=\
     core_global.h \
@@ -45,4 +46,5 @@ HEADERS +=\
     standardengine.h \
     board0x88.h \
     fen.h \
-    array2d.h
+    array2d.h \
+    util.h
