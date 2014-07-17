@@ -13,7 +13,6 @@
 
 ConsoleGame::ConsoleGame()
 {
-  mGameOver = false;
 }
 
 ConsoleGame::~ConsoleGame()
@@ -60,7 +59,7 @@ void ConsoleGame::handleMove(std::istringstream & iss)
     rowMap['8'] = 7;
 
   }
-  if (mGameOver) {
+  if (isGameOver()) {
     std::cout << "The game is over. Type new to start a new game\n";
     return;
   }
@@ -89,14 +88,14 @@ void ConsoleGame::handleMove(std::istringstream & iss)
 
   uchar moveIndex = 0;
   bool moveFound = false;
-  sMove moveList[256];
+  MoveList moveList;
   uchar totalMoves = mBoard->generateMoves(moveList);
   for (uchar i = 0; i < totalMoves; i++) {
-    uchar sourceRow = mBoard->getMoveSourceRow(moveList[i]);
-    uchar sourceCol = mBoard->getMoveSourceCol(moveList[i]);
-    uchar destRow = mBoard->getMoveDestinationRow(moveList[i]);
-    uchar destCol = mBoard->getMoveDestinationCol(moveList[i]);
-
+    Move move = moveList[i];
+    uchar sourceRow = move.mSourceRow;
+    uchar sourceCol = move.mSourceCol;
+    uchar destRow = move.mDestRow;
+    uchar destCol = move.mDestCol;
     if (srcRow == sourceRow && dstRow == destRow && srcCol == sourceCol && dstCol == destCol) {
       moveIndex = i;
       moveFound = true;
@@ -106,66 +105,22 @@ void ConsoleGame::handleMove(std::istringstream & iss)
 
   if (!moveFound) {
     std::cout << "Sorry " << moveString << " is not a valid move\n";
-    for (uint i = 0; i < totalMoves; i++) {
-      std::cout << mBoard->getSmithNotation(moveList[i]) << "\n";
-    }
+    for (uint i = 0; i < totalMoves; i++)
+      std::cout << getSmithNotation(moveList[i]) << "\n";
     return;
   }
 
   doMove(moveList[moveIndex]);
-  mGameOver = isGameOver();
-  if (mGameOver)
+  if (isGameOver()) {
+    showEndGame();
     return;
+  }
 
   executeEngineMove();
-  mGameOver = isGameOver();
-
-  //mBoard->makeMove(moveList[moveIndex]);
-  //mCompletedMoves[mTotalMoves] = moveList[moveIndex];
-  //++mTotalMoves;
-  //mGameOver = isGameOver();
-
-  //std::cout << srcRow << " " << srcCol << "\n";
-  //std::cout << destRow << " " << destCol << "\n";
-
-//  Move newMove = Move::fromSmithNotation(moveString, isWhiteToMove());
-//  uint sourceRow = newMove.sourceRow();
-//  uint sourceCol = newMove.sourceColumn();
-//  uint destRow = newMove.destinationRow();
-//  PieceType pieceType = getPieceType(sourceRow, sourceCol);
-//  if (pieceType == WhitePawn && (destRow - sourceRow) > 1)
-//    newMove.setDoublePawnPush();
-
-//  if (pieceType == BlackPawn && (sourceRow - destRow) > 1)
-//    newMove.setDoublePawnPush();
-
-//  MoveList moveList;
-//  mBoard->generateLegalMoves(newMove.sourceRow(), newMove.sourceColumn(), moveList);
-
-//  bool moveFound = false;
-//  for (uint i = 0; i < moveList.totalMoves(); i++) {
-//    Move legalMove(moveList[i]);
-//    if (legalMove == newMove) {
-//      moveFound = true;
-//      break;
-//    }
-//  }
-
-//  if (!moveFound) {
-//    std::cout << "Sorry " << moveString << " is not a valid move\n";
-//    for (uint i = 0; i < moveList.totalMoves(); i++) {
-//      std::cout << moveList[i].getSmithNotation() << "\n";
-//    }
-//    return;
-//  }
-
-//  doMove(newMove);
-//  mGameOver = isGameOver();
-//  if (mGameOver)
-//    return;
-
-  //executeEngineMove();
-  //mGameOver = isGameOver();
+  if (isGameOver()) {
+    showEndGame();
+    return;
+  }
 }
 
 template <typename T>
@@ -299,7 +254,6 @@ void ConsoleGame::handleFen() const
 
 void ConsoleGame::handleNewGame()
 {
-  mGameOver = false;
   startNewGame();
 }
 
@@ -319,10 +273,10 @@ void ConsoleGame::handlePerft(std::istringstream & iss) const
 
 void ConsoleGame::handleShow() const
 {
-  sMove moveList[256];
+  MoveList moveList;
   uchar totalMoves = mBoard->generateMoves(moveList);
   for (uchar i = 0; i < totalMoves; i++)
-    std::cout << mBoard->getSmithNotation(moveList[i]) << "\n";
+    std::cout << getSmithNotation(moveList[i]) << "\n";
 }
 
 void ConsoleGame::handlePrint() const
@@ -375,8 +329,6 @@ void ConsoleGame::handlePrint() const
   std::cout << " +---+---+---+---+---+---+---+---+\n";
   std::cout << "   A   B   C   D   E   F   G   H  \n";
   std::cout << "\n";
-
-  //mBoard->printColors();
 }
 
 void ConsoleGame::handleSetBoard(std::istringstream & iss)
@@ -388,9 +340,7 @@ void ConsoleGame::handleSetBoard(std::istringstream & iss)
     return;
   }
 
-  // Set the position of the board
-  if (setBoardPosition(fenString))
-    mTotalCompletedMoves = 0; // Disable undo
+  setBoardPosition(fenString);
 }
 
 void ConsoleGame::handleTable(std::istringstream & iss) const
@@ -503,31 +453,9 @@ void ConsoleGame::handleUndo()
   undoLastMove();
 }
 
-bool ConsoleGame::isGameOver()
-{
-  bool gameOver = false;
-
-  if (isBlackMated()) {
-    std::cout << "Checkmate. White wins\n";
-    gameOver = true;
-  }
-
-  if (isWhiteMated()) {
-    std::cout << "Checkmate. Black wins\n";
-    gameOver = true;
-  }
-
-  if (isStalemate()) {
-    std::cout << "Stalemate\n";
-    gameOver = true;
-  }
-
-  return gameOver;
-}
-
 int ConsoleGame::run()
 {
-//  std::string cmdString("5");
+//  std::string cmdString("4");
 //  std::istringstream iss(cmdString);
 //  handlePerft(iss);
 //  return 0;
@@ -578,4 +506,16 @@ int ConsoleGame::run()
     }
   }
   return 0;
+}
+
+void ConsoleGame::showEndGame()
+{
+  if (isBlackMated())
+    std::cout << "Checkmate. White wins\n";
+
+  if (isWhiteMated())
+    std::cout << "Checkmate. Black wins\n";
+
+  if (isStalemate())
+    std::cout << "Stalemate\n";
 }

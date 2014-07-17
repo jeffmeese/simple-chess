@@ -1,41 +1,51 @@
 #ifndef MOVELIST_H
 #define MOVELIST_H
 
-#include "types.h"
 #include "move.h"
 
 class MoveList
 {
 public:
   MoveList();
-  MoveList(uint totalCapacity);
-  ~MoveList();
 
 public:
-  uint totalCapacity() const;
-  uint totalMoves() const;
+  uchar size() const;
 
 public:
   void addMove(const Move & newMove);
-  void addMoveList(const MoveList & moveList);
-  void clearMoves();
-  bool deleteMove(const Move & moveToDelete);
-  bool deleteMove(uint index);
-  Move & moveAt(uint index);
-  const Move & moveAt(uint index) const;
-  Move & operator[](uint index);
-  const Move & operator[](uint index) const;
+  void clear();
+  Move moveAt(uchar index) const;
+  void removeLast();
+
+public:
+  const Move & operator[](uchar index) const;
 
 private:
-  MoveList(const MoveList&);
-  MoveList& operator=(const MoveList&);
-  void init(uint totalCapacity);
-
-private:
-  //Move * mMoves;
   Move mMoves[256];
-  uint mTotalCapacity;
-  uint mTotalMoves;
+  uchar mTotalMoves;
 };
+
+inline MoveList::MoveList()
+  : mTotalMoves(0)
+{ }
+
+inline void MoveList::addMove(const Move & newMove)
+{ mMoves[mTotalMoves++] = newMove; }
+
+inline void MoveList::clear()
+{ mTotalMoves = 0; }
+
+inline const Move & MoveList::operator[](uchar index) const
+{ return mMoves[index]; }
+
+inline Move MoveList::moveAt(uchar index) const
+{ return mMoves[index]; }
+
+// Yes, there's no error checking so this could end badly
+inline void MoveList::removeLast()
+{ --mTotalMoves; }
+
+inline uchar MoveList::size() const
+{ return mTotalMoves; }
 
 #endif // MOVELIST_H

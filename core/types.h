@@ -24,25 +24,29 @@ enum Piece
   PieceEmpty
 };
 
+enum PieceType
+{
+  NoPiece = 0,
+  WhitePawn = 0x01,
+  WhiteKnight = 0x02,
+  WhiteBishop = 0x03,
+  WhiteRook = 0x04,
+  WhiteQueen = 0x05,
+  WhiteKing = 0x06,
+  BlackPawn = 0x08,
+  BlackKnight = 0x09,
+  BlackBishop = 0x0A,
+  BlackRook = 0x0B,
+  BlackQueen = 0x0C,
+  BlackKing = 0x0D
+};
+
 enum Castling
 {
   CastleWhiteKing = 0x0001,
   CastleWhiteQueen = 0x0002,
   CastleBlackKing = 0x0004,
   CastleBlackQueen = 0x0008
-};
-
-struct sMove
-{
-  uchar fromSquare;
-  uchar toSquare;
-  uchar halfMove;
-  uchar epIndex;
-  uchar fromPiece;
-  uchar toPiece;
-  uchar capturedPiece;
-  uchar castlingRights;
-  uchar flags;
 };
 
 enum MoveFlags
@@ -55,5 +59,14 @@ enum MoveFlags
   MovePromotion = 16,
   MoveNull = 32
 };
+
+inline bool isPiece(PieceType pieceType)
+{ return pieceType > 0; }
+
+inline bool isWhitePiece(PieceType pieceType)
+{ return ( (pieceType > 0) && (pieceType < 0x07) ); }
+
+inline bool isBlackPiece(PieceType pieceType)
+{ return ( (pieceType > 0x07) && (pieceType < 0x0E) ); }
 
 #endif // TYPES_H

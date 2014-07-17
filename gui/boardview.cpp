@@ -17,7 +17,7 @@ BoardView::BoardView()
   mPieceSelected = false;
   mShowValidMoves = true;
   mSelectedRow = mSelectedCol = -1;
-  mTotalMoves = 0;
+  //mTotalMoves = 0;
 
   mWhiteCellColor.setRgb(243, 213, 168);
   mBlackCellColor.setRgb(196, 153, 87);
@@ -41,7 +41,8 @@ void BoardView::deselectPiece()
 {
   mPieceSelected = false;
   mSelectedRow = mSelectedCol = -1;
-  mTotalMoves = 0;
+  mMoveList.clear();
+  //mTotalMoves = 0;
   update();
 }
 
@@ -87,19 +88,22 @@ void BoardView::drawBoard(QPainter &painter, const QRect & boardRect)
   }
 
   if (mShowValidMoves) {
-    for (uchar i = 0; i < mTotalMoves; i++) {
-      sMove move = mMoveList[i];
-      uchar destRow = mGame->board()->getMoveDestinationRow(move);
-      uchar destCol = mGame->board()->getMoveDestinationCol(move);
+    for (uchar i = 0; i < mMoveList.size(); i++) {
+      //sMove move = mMoveList[i];
+      //uchar destRow = mGame->board()->getMoveDestinationRow(move);
+      //uchar destCol = mGame->board()->getMoveDestinationCol(move);
+      Move move = mMoveList[i];
+      uchar destRow = move.mDestRow;
+      uchar destCol = move.mDestCol;
 
       QRect cellRect;
       getCellRect(destRow, destCol, cellWidth, cellHeight, boardRect, cellRect);
 
       QColor cellColor = mValidMoveCellColor;
-      if (move.flags & MoveCapture)
+      if (move.mFlags & MoveCapture)
         cellColor = mAttackedCellColor;
 
-      if (move.flags & MoveEpCapture)
+      if (move.mFlags & MoveEpCapture)
         cellColor = mEnPassantCellColor;
 
       QBrush cellBrush(cellColor);
@@ -167,10 +171,13 @@ PieceType BoardView::getPieceAt(const QPoint & point, int & selectedRow, int & s
 
 bool BoardView::isValidDestination(uchar row, uchar col)
 {
-  for (uchar i = 0; i < mTotalMoves; i++) {
-    sMove move = mMoveList[i];
-    uchar destRow = mGame->board()->getMoveDestinationRow(move);
-    uchar destCol = mGame->board()->getMoveDestinationCol(move);
+  for (uchar i = 0; i < mMoveList.size(); i++) {
+//    sMove move = mMoveList[i];
+//    uchar destRow = mGame->board()->getMoveDestinationRow(move);
+//    uchar destCol = mGame->board()->getMoveDestinationCol(move);
+    Move move = mMoveList[i];
+    uchar destRow = move.mDestRow;
+    uchar destCol = move.mDestCol;
     if (row == destRow && col == destCol)
       return true;
   }
@@ -254,20 +261,25 @@ void BoardView::paintEvent(QPaintEvent *paintEvent)
 
 bool BoardView::movePiece(uchar sourceRow, uchar sourceCol, uchar destRow, uchar destCol)
 {
-  for (uint i = 0; i < mTotalMoves; i++) {
-    sMove move = mMoveList[i];
-    uchar moveSourceRow = mGame->board()->getMoveSourceRow(move);
-    uchar moveSourceCol = mGame->board()->getMoveSourceCol(move);
-    uchar moveDestRow = mGame->board()->getMoveDestinationRow(move);
-    uchar moveDestCol = mGame->board()->getMoveDestinationCol(move);
+  for (uint i = 0; i < mMoveList.size(); i++) {
+//    sMove move = mMoveList[i];
+//    uchar moveSourceRow = mGame->board()->getMoveSourceRow(move);
+//    uchar moveSourceCol = mGame->board()->getMoveSourceCol(move);
+//    uchar moveDestRow = mGame->board()->getMoveDestinationRow(move);
+//    uchar moveDestCol = mGame->board()->getMoveDestinationCol(move);
+    Move move = mMoveList[i];
+    uchar moveSourceRow = move.mSourceRow;
+    uchar moveSourceCol = move.mSourceCol;
+    uchar moveDestRow = move.mDestRow;
+    uchar moveDestCol = move.mDestCol;
     if (moveSourceRow == sourceRow && moveSourceCol == sourceCol && moveDestRow == destRow && moveDestCol == destCol) {
 
-      if (move.flags & MovePromotion) {
+      if (move.mFlags & MovePromotion) {
         Piece piece = showPromotionDialog();
         if (piece == PieceEmpty)
           return false;
 
-        move.toPiece = piece;
+        move.mToPiece = piece;
       }
 
       deselectPiece();
@@ -334,7 +346,7 @@ void BoardView::selectPiece(uchar row, uchar col)
   mPieceSelected = true;
   mSelectedRow = row;
   mSelectedCol = col;
-  mTotalMoves = mGame->generateMoves(row, col, mMoveList);
+  mGame->generateMoves(row, col, mMoveList);
   update();
 }
 

@@ -2,7 +2,6 @@
 #define FENPARSER_H
 
 #include "types.h"
-#include "piecetype.h"
 
 #include <string>
 

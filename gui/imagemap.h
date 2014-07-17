@@ -5,7 +5,7 @@
 #include <QObject>
 #include <map>
 
-#include <core/piecetype.h>
+#include <core/types.h>
 
 class ImageMap
     : public QObject

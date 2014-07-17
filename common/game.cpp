@@ -6,11 +6,12 @@
 #include <iostream>
 
 Game::Game()
-  : mBoard(new Board)
-  , mEngine(new Engine)
-  , mWhiteMated(false)
+  : mWhiteMated(false)
   , mBlackMated(false)
-  , mTotalCompletedMoves(0)
+  , mStalemate(false)
+  , mBoard(new Board)
+  , mEngine(new Engine)
+  , mCompletedMoves(new MoveList)
 {
 }
 
@@ -25,59 +26,52 @@ const Board * Game::board() const
 
 void Game::checkMateCondition()
 {
-  mBlackMated = mWhiteMated = false;
-
-  sMove moveList[256];
+  // Generate moves
+  MoveList moveList;
   uchar totalMoves = mBoard->generateMoves(moveList);
 
-  if (isWhiteToMove()) {
-    mWhiteMated = true;
-    for (uchar i = 0; i < totalMoves; i++) {
-      mBoard->makeMove(moveList[i]);
-      if (!mBoard->isKingAttacked(White)) {
-        mWhiteMated = false;
-        mBoard->unmakeMove(moveList[i]);
-        break;
-      }
-      mBoard->unmakeMove(moveList[i]);
-    }
-  }
-  else {
-    mBlackMated = true;
-    for (uchar i = 0; i < totalMoves; i++) {
-      mBoard->makeMove(moveList[i]);
-      if (!mBoard->isKingAttacked(Black)) {
-        mBlackMated = false;
-        mBoard->unmakeMove(moveList[i]);
-        break;
-      }
-      mBoard->unmakeMove(moveList[i]);
-    }
+  // Check for legal moves
+  uchar legalMoves = 0;
+  for (uchar i = 0; i < totalMoves; i++) {
+    mBoard->makeMove(moveList[i]);
+    if (!mBoard->isKingAttacked(!mBoard->sideToMove()))
+      legalMoves++;
+    mBoard->unmakeMove(moveList[i]);
   }
 
-//  if (totalMoves == 0) {
-//    if (isWhiteToMove() && mBoard->isKingAttacked(White))
-//      mWhiteMated = true;
+  // Check for checkmate
+  mBlackMated = mWhiteMated = false;
+  if (legalMoves == 0) {
+    if (isWhiteToMove() && mBoard->isKingAttacked(White))
+      mWhiteMated = true;
+    else if (!isWhiteToMove() && mBoard->isKingAttacked(Black))
+      mBlackMated = true;
+  }
 
-//    if (!isWhiteToMove() && mBoard->isKingAttacked(Black))
-//      mBlackMated = true;
-//  }
+  if (mWhiteMated || mBlackMated)
+    return;
 
-  mGameOver = (mBlackMated || mWhiteMated);
+  // Check for stalemate
+  mStalemate = false;
+  if (legalMoves == 0) {
+    if (isWhiteToMove() && !mBoard->isKingAttacked(White))
+      mStalemate = true;
+    if (!isWhiteToMove() && !mBoard->isKingAttacked(Black))
+      mStalemate = true;
+  }
 }
 
-bool Game::doMove(const sMove &newMove)
+bool Game::doMove(const Move & newMove)
 {
   mBoard->makeMove(newMove);
-  mCompletedMoves[mTotalCompletedMoves] = newMove;
-  mTotalCompletedMoves++;
-
+  mCompletedMoves->addMove(newMove);
   checkMateCondition();
+  return true;
 }
 
 bool Game::executeEngineMove()
 {
-  sMove engineMove;
+  Move engineMove;
   bool validMove = mEngine->getMove(mBoard.get(), engineMove);
   if (!validMove)
     return false;
@@ -86,7 +80,7 @@ bool Game::executeEngineMove()
   return true;
 }
 
-uchar Game::generateMoves(uchar row, uchar col, sMove * moveList)
+uchar Game::generateMoves(uchar row, uchar col, MoveList & moveList)
 {
   return mBoard->generateMoves(row, col, moveList);
 }
@@ -96,9 +90,14 @@ bool Game::isBlackMated() const
   return mBlackMated;
 }
 
+bool Game::isGameOver() const
+{
+  return (mBlackMated || mWhiteMated || mStalemate);
+}
+
 bool Game::isStalemate() const
 {
-  return false;
+  return mStalemate;
 }
 
 bool Game::isWhiteMated() const
@@ -113,24 +112,30 @@ bool Game::isWhiteToMove() const
 
 bool Game::setBoardPosition(const std::string &fenString)
 {
-  return mBoard->setPosition(fenString);
+  if (!mBoard->setPosition(fenString))
+    return false;
+
+  mCompletedMoves->clear();
+  return true;
 }
 
 void Game::startNewGame()
 {
   mBoard.reset(new Board);
-  mTotalCompletedMoves = 0;
+  mCompletedMoves->clear();
+  mBlackMated = mWhiteMated = mStalemate = false;
 }
 
 bool Game::undoLastMove()
 {
-  if (mTotalCompletedMoves == 0)
+  uchar totalMoves = mCompletedMoves->size();
+  if (totalMoves == 0)
     return false;
 
-  sMove move = mCompletedMoves[mTotalCompletedMoves-1];
+  Move move = mCompletedMoves->moveAt(totalMoves-1);
   mBoard->unmakeMove(move);
-  mTotalCompletedMoves--;
-
+  mCompletedMoves->removeLast();
   checkMateCondition();
+
   return true;
 }

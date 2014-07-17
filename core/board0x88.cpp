@@ -1,5 +1,7 @@
 #include "board0x88.h"
 #include "fen.h"
+#include "move.h"
+#include "movelist.h"
 
 #include <iostream>
 
@@ -14,6 +16,7 @@ static const char SE = -15;
 
 static const char straightAttacks[] = {NORTH, SOUTH, EAST, WEST};
 static const char diagAttacks[] = {NW, NE, SE, SW};
+static const char knightAttacks[] = {-31, -33, -14, -18, 18, 14, 33, 31};
 static const bool sliders[5] = {0, 1, 1, 1, 0};
 static const char numDirections[5] = {8, 8, 4, 4, 8};
 static const char dirVectors[5][8] =
@@ -42,17 +45,14 @@ Board0x88::Board0x88(void)
   initBoard();
   initAttacks();
   //initMoves();
-  //initAttacks();
-  //initPieceMap();
 }
 
 Board0x88::~Board0x88(void)
 {
 }
 
-void Board0x88::generateCastlingMoves()
+void Board0x88::generateCastlingMoves(MoveList & moveList)
 {
-  // Castling
   if (mSideToMove == White) {
     if (mCastlingRights & CastleWhiteKing) {
       if (mPieces[F1] == PieceEmpty &&
@@ -61,7 +61,7 @@ void Board0x88::generateCastlingMoves()
           !isCellAttacked(F1, Black) &&
           !isCellAttacked(G1, Black))
       {
-        pushMove(E1, G1, King, PieceEmpty, MoveCastle);
+        pushMove(E1, G1, King, PieceEmpty, MoveCastle, moveList);
       }
     }
     if (mCastlingRights & CastleWhiteQueen) {
@@ -72,7 +72,7 @@ void Board0x88::generateCastlingMoves()
           !isCellAttacked(D1, Black) &&
           !isCellAttacked(C1, Black))
       {
-        pushMove(E1, C1, King, PieceEmpty, MoveCastle);
+        pushMove(E1, C1, King, PieceEmpty, MoveCastle, moveList);
       }
     }
   }
@@ -84,7 +84,7 @@ void Board0x88::generateCastlingMoves()
           !isCellAttacked(F8, White) &&
           !isCellAttacked(G8, White))
       {
-        pushMove(E8, G8, King, PieceEmpty, MoveCastle);
+        pushMove(E8, G8, King, PieceEmpty, MoveCastle, moveList);
       }
     }
     if (mCastlingRights & CastleBlackQueen) {
@@ -95,18 +95,15 @@ void Board0x88::generateCastlingMoves()
           !isCellAttacked(D8, White) &&
           !isCellAttacked(C8, White))
       {
-        pushMove(E8, C8, King, PieceEmpty, MoveCastle);
+        pushMove(E8, C8, King, PieceEmpty, MoveCastle, moveList);
       }
     }
   }
 }
 
-uchar Board0x88::generateMoves(sMove * moveList)
+uchar Board0x88::generateMoves(MoveList & moveList)
 {
-  mMoves = moveList;
-  mMoveCount = 0;
-
-  generateCastlingMoves();
+  generateCastlingMoves(moveList);
 
   for (uchar i = 0; i < 8; i++) {
     for (uchar col = 0; col < 8; col++) {
@@ -115,8 +112,8 @@ uchar Board0x88::generateMoves(sMove * moveList)
       uint index = getIndex(7-i, col);
       if (mColors[index] == mSideToMove) {
         if (mPieces[index] == Pawn) {
-          generatePawnMoves(index);
-          generatePawnCaptures(index);
+          generatePawnMoves(index, moveList);
+          generatePawnCaptures(index, moveList);
         }
         else {
           uchar pieceType = mPieces[index];
@@ -128,10 +125,10 @@ uchar Board0x88::generateMoves(sMove * moveList)
                 break;
 
               if (mColors[pos] == ColorEmpty) {  // Standard move
-                pushMove(index, pos, pieceType, PieceEmpty, MoveNormal);
+                pushMove(index, pos, pieceType, PieceEmpty, MoveNormal, moveList);
               }
               else if (mColors[pos] != mSideToMove) { // Capture move
-                pushMove(index, pos, pieceType, mPieces[pos], MoveCapture);
+                pushMove(index, pos, pieceType, mPieces[pos], MoveCapture, moveList);
                 break;
               }
               else {
@@ -147,50 +144,45 @@ uchar Board0x88::generateMoves(sMove * moveList)
       }
     }
   }
-
-  return mMoveCount;
+  return moveList.size();
 }
 
 // This function should not be called by engines
 // It exists simply to find the legal moves for a particular
 // square, such as is needed when running in a GUI
-uchar Board0x88::generateMoves(uchar row, uchar col, sMove * moveList)
+uchar Board0x88::generateMoves(uchar row, uchar col, MoveList & moveList)
 {
-  sMove allMoves[256];
+  MoveList allMoves;
   uchar totalMoves = generateMoves(allMoves);
 
-  uchar moveIndex = 0;
   for (uchar i = 0; i < totalMoves; i++) {
-    sMove move = allMoves[i];
-    if (getRow(move.fromSquare) == row && getCol(move.fromSquare) == col) {
-      makeMove(move);
-      if (!isCellAttacked(mKingIndex[!mSideToMove], mSideToMove) ) {
-        moveList[moveIndex] = move;
-        moveIndex++;
-      }
-      unmakeMove(move);
+    if (allMoves[i].mSourceRow == row && allMoves[i].mSourceCol == col) {
+      makeMove(allMoves[i]);
+      if (!isCellAttacked(mKingIndex[!mSideToMove], mSideToMove) )
+        moveList.addMove(allMoves[i]);
+      unmakeMove(allMoves[i]);
     }
   }
-  return moveIndex;
+  return moveList.size();
 }
 
-void Board0x88::generatePawnCaptures(uchar index)
+void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
 {
   if (mSideToMove == White) {
     if (isValidSquare(index+NW) && ( (mEpIndex == index+NW ) || mColors[index+NW] == Black ) )
-      pushMove(index, index+NW, Pawn, mPieces[index+NW], MoveCapture);
+      pushMove(index, index+NW, Pawn, mPieces[index+NW], MoveCapture, moveList);
     if (isValidSquare(index+NE) && ( (mEpIndex == index+NE ) || mColors[index+NE] == Black ) )
-      pushMove(index, index+NE, Pawn, mPieces[index+NE], MoveCapture);
+      pushMove(index, index+NE, Pawn, mPieces[index+NE], MoveCapture, moveList);
   }
   else {
     if (isValidSquare(index+SW) && ( (mEpIndex == index+SW ) || mColors[index+SW] == White ) )
-      pushMove(index, index+SW, Pawn, mPieces[index+SW], MoveCapture);
+      pushMove(index, index+SW, Pawn, mPieces[index+SW], MoveCapture, moveList);
     if (isValidSquare(index+SE) && ( (mEpIndex == index+SE ) || mColors[index+SE] == White ) )
-      pushMove(index, index+SE, Pawn, mPieces[index+SE], MoveCapture);
+      pushMove(index, index+SE, Pawn, mPieces[index+SE], MoveCapture, moveList);
   }
 }
 
-void Board0x88::generatePawnMoves(uchar index)
+void Board0x88::generatePawnMoves(uchar index, MoveList & moveList)
 {
   char dir = NORTH;
   char epRow = 1;
@@ -200,67 +192,10 @@ void Board0x88::generatePawnMoves(uchar index)
   }
 
   if (mPieces[index+dir] == PieceEmpty) {
-    pushMove(index, index+dir, Pawn, PieceEmpty, MoveNormal);
+    pushMove(index, index+dir, Pawn, PieceEmpty, MoveNormal, moveList);
     if (getRow(index) == epRow && mPieces[index+dir+dir] == PieceEmpty)
-      pushMove(index, index+dir+dir, Pawn, PieceEmpty, MoveEp);
+      pushMove(index, index+dir+dir, Pawn, PieceEmpty, MoveEp, moveList);
   }
-}
-
-std::string Board0x88::getSmithNotation(const sMove & move) const
-{
-  uchar sourceRow = getRow(move.fromSquare);
-  uchar sourceCol = getCol(move.fromSquare);
-  uchar destRow = getRow(move.toSquare);
-  uchar destCol = getCol(move.toSquare);
-
-  Move newMove(sourceRow, sourceCol, destRow, destCol);
-
-  if (move.flags & MoveCapture) {
-    uchar capturePiece = move.capturedPiece;
-    uchar color = mColors[move.toSquare];
-
-    switch (capturePiece) {
-    case Pawn:
-      newMove.setCapturedPiece( color==White ? WhitePawn : BlackPawn);
-      break;
-    case Rook:
-      newMove.setCapturedPiece( color==White ? WhiteRook : BlackRook);
-      break;
-    case Knight:
-      newMove.setCapturedPiece( color==White ? WhiteKnight : BlackKnight);
-      break;
-    case Bishop:
-      newMove.setCapturedPiece( color==White ? WhiteBishop : BlackBishop);
-      break;
-    case Queen:
-      newMove.setCapturedPiece( color==White ? WhiteQueen : BlackQueen);
-      break;
-    case King:
-      newMove.setCapturedPiece( color==White ? WhiteKing : BlackKing);
-      break;
-    }
-  }
-
-  if (move.flags & MovePromotion) {
-    uchar promoPiece = move.toPiece;
-    uchar color = mColors[move.fromSquare];
-    switch (promoPiece) {
-    case Rook:
-      newMove.setPromotedPiece( color==White ? WhiteRook : BlackRook);
-      break;
-    case Knight:
-      newMove.setPromotedPiece( color==White ? WhiteKnight : BlackKnight);
-      break;
-    case Bishop:
-      newMove.setPromotedPiece( color==White ? WhiteBishop : BlackBishop);
-      break;
-    case Queen:
-      newMove.setPromotedPiece( color==White ? WhiteQueen : BlackQueen);
-      break;
-    }
-  }
-
-  return newMove.getSmithNotation();
 }
 
 void Board0x88::initAttacks()
@@ -369,6 +304,11 @@ void Board0x88::initBoard()
   }
 }
 
+void Board0x88::initMoves()
+{
+
+}
+
 bool Board0x88::isCellAttacked(uchar index, uchar attackingColor) const
 {
   // Pawn attacks
@@ -381,22 +321,60 @@ bool Board0x88::isCellAttacked(uchar index, uchar attackingColor) const
     if (mPieces[index+NW] == Pawn && mColors[index+NW] == Black) return true;
   }
 
+//#define PRELOADED
+
+#ifndef PRELOADED
+  // Rook, Queen, and King straight attacks
+  for (uchar i = 0; i < 4; i++) {
+    char dir = straightAttacks[i];
+    for (uchar pos = index + dir;; pos += dir) {
+
+      if (!isValidSquare(pos))
+        break;
+
+      if (mPieces[pos] != PieceEmpty) {
+
+        if ( (pos == index + dir) && (mColors[pos] == attackingColor) && (mPieces[pos] == King) )
+          return true;
+
+        if ( (mColors[pos] == attackingColor) && (mPieces[pos] == Queen || mPieces[pos] == Rook) )
+          return true;
+
+        break;
+      }
+    }
+  }
+
+  // Bishop, Queen, and King diagonal attacks
+  for (uchar i = 0; i < 4; i++) {
+
+    char dir = diagAttacks[i];
+    for (uchar pos = index + dir;; pos += dir) {
+
+      if (!isValidSquare(pos))
+        break;
+
+      if (mPieces[pos] != PieceEmpty) {
+
+        if ( (pos == index + dir) && (mColors[pos] == attackingColor) && (mPieces[pos] == King) )
+          return true;
+
+        if ( (mColors[pos] == attackingColor) && (mPieces[pos] == Queen || mPieces[pos] == Bishop) )
+          return true;
+
+        break;
+      }
+    }
+  }
+
   // Knight Attacks
-  uint numKnightAttacks = mNumKnightAttacks[index];
-  for (uint i = 0; i < numKnightAttacks; i++) {
-    uint pos = mKnightAttacks(index, i);
-    if (mColors[pos] == attackingColor && mPieces[pos] == Knight)
+  for (uchar i = 0; i < 8; i++) {
+    uchar pos = index + knightAttacks[i];
+    if (isValidSquare(pos) && mColors[pos] == attackingColor && mPieces[pos] == Knight)
       return true;
   }
 
-  // King Attacks
-  uint numKingAttacks = mNumKingAttacks[index];
-  for (uint i = 0; i < numKingAttacks; i++) {
-    uint pos = mKingAttacks(index, i);
-    if (mColors[pos] == attackingColor && mPieces[pos] == King)
-      return true;
-  }
-
+#else  // PRELOADED
   // Rook and Queen straight attacks
   for (uint direction = 0; direction < 4; direction++) {
     uchar numAttacks = mNumStraightAttacks(index, direction);
@@ -427,28 +405,58 @@ bool Board0x88::isCellAttacked(uchar index, uchar attackingColor) const
     }
   }
 
+  // Pawn attacks
+  if (attackingColor == White) {
+    if (mPieces[index+SE] == Pawn && mColors[index+SE] == White) return true;
+    if (mPieces[index+SW] == Pawn && mColors[index+SW] == White) return true;
+  }
+  else {
+    if (mPieces[index+NE] == Pawn && mColors[index+NE] == Black) return true;
+    if (mPieces[index+NW] == Pawn && mColors[index+NW] == Black) return true;
+  }
+
+  // Knight Attacks
+  uint numKnightAttacks = mNumKnightAttacks[index];
+  for (uint i = 0; i < numKnightAttacks; i++) {
+    uint pos = mKnightAttacks(index, i);
+    if (mColors[pos] == attackingColor && mPieces[pos] == Knight)
+      return true;
+  }
+
+  // King Attacks
+  uint numKingAttacks = mNumKingAttacks[index];
+  for (uint i = 0; i < numKingAttacks; i++) {
+    uint pos = mKingAttacks(index, i);
+    if (mColors[pos] == attackingColor && mPieces[pos] == King)
+      return true;
+  }
+#endif // #ifndef PRELOADED
+
   return false;
 }
 
-void Board0x88::makeMove(const sMove &newMove)
+void Board0x88::makeMove(const Move & newMove)
 {
-  mPieces[newMove.fromSquare] = PieceEmpty;
-  mColors[newMove.fromSquare] = ColorEmpty;
-  mPieces[newMove.toSquare] = newMove.toPiece;
-  mColors[newMove.toSquare] = mSideToMove;
+  uchar fromSquare = getIndex(newMove.mSourceRow, newMove.mSourceCol);
+  uchar toSquare = getIndex(newMove.mDestRow, newMove.mDestCol);
+
+  mPieces[fromSquare] = PieceEmpty;
+  mColors[fromSquare] = ColorEmpty;
+  mPieces[toSquare] = newMove.mToPiece;
+  mColors[toSquare] = mSideToMove;
 
   mHalfMoveClock++;
-  if (newMove.fromPiece == Pawn || newMove.flags & MoveCapture)
+  if (newMove.mFromPiece == Pawn || newMove.mFlags & MoveCapture)
     mHalfMoveClock = 0;
 
-  if (newMove.fromPiece == King)
-    mKingIndex[mSideToMove] = newMove.toSquare;
+  if (newMove.mFromPiece == King)
+    mKingIndex[mSideToMove] = toSquare;
 
   // Update castling rights
   // If the square associated with a king or rook is
   // modified in any way remove the castling ability
   // for that piece
-  switch (newMove.fromSquare) {
+  switch (fromSquare) {
   case H1:
     mCastlingRights &= ~CastleWhiteKing;
     break;
@@ -469,7 +477,7 @@ void Board0x88::makeMove(const sMove &newMove)
     break;
   }
 
-  switch (newMove.toSquare) {
+  switch (toSquare) {
   case H1:
     mCastlingRights &= ~CastleWhiteKing;
     break;
@@ -490,8 +498,8 @@ void Board0x88::makeMove(const sMove &newMove)
     break;
   }
 
-  if (newMove.flags & MoveCastle) {
-    switch (newMove.toSquare) {
+  if (newMove.mFlags & MoveCastle) {
+    switch (toSquare) {
     case C1:
       mPieces[D1] = Rook;
       mColors[D1] = White;
@@ -521,16 +529,16 @@ void Board0x88::makeMove(const sMove &newMove)
 
   // Update the en-passant index
   mEpIndex = 0x7f;
-  if (newMove.flags & MoveEp) {
+  if (newMove.mFlags & MoveEp) {
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
-    mEpIndex = newMove.toSquare + dir;
+    mEpIndex = toSquare + dir;
   }
 
   // Handle en-passant capture
-  if (newMove.flags & MoveEpCapture) {
+  if (newMove.mFlags & MoveEpCapture) {
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
-    mPieces[newMove.toSquare+dir] = PieceEmpty;
-    mColors[newMove.toSquare+dir] = ColorEmpty;
+    mPieces[toSquare+dir] = PieceEmpty;
+    mColors[toSquare+dir] = ColorEmpty;
   }
 
   mSideToMove = !mSideToMove;
@@ -569,30 +577,39 @@ PieceType Board0x88::pieceType(uchar row, uchar col) const
   return type;
 }
 
-void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, uchar capturePiece, uchar flags)
+void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, uchar capturePiece, uchar flags, MoveList & moveList)
 {
-  mMoves[mMoveCount].fromSquare = fromSquare;
-  mMoves[mMoveCount].toSquare = toSquare;
-  mMoves[mMoveCount].fromPiece = fromPiece;
-  mMoves[mMoveCount].toPiece = fromPiece;
-  mMoves[mMoveCount].capturedPiece = capturePiece;
-  mMoves[mMoveCount].flags = flags;
-  mMoves[mMoveCount].castlingRights = mCastlingRights;
-  mMoves[mMoveCount].halfMove = mHalfMoveClock;
-  mMoves[mMoveCount].epIndex = mEpIndex;
+  uchar sourceRow = getRow(fromSquare);
+  uchar sourceCol = getCol(fromSquare);
+  uchar destRow = getRow(toSquare);
+  uchar destCol = getCol(toSquare);
+  uchar epCol = getCol(mEpIndex);
+
+  Move newMove;
+  newMove.mSourceRow = sourceRow;
+  newMove.mSourceCol = sourceCol;
+  newMove.mDestRow = destRow;
+  newMove.mDestCol = destCol;
+  newMove.mFromPiece = fromPiece;
+  newMove.mToPiece = fromPiece;
+  newMove.mCastlingRights = mCastlingRights;
+  newMove.mHalfMoveClock = mHalfMoveClock;
+  newMove.mEnPassantCol = epCol;
+  newMove.mFlags = flags;
+  newMove.mCapturePiece = capturePiece;
 
   if ( fromPiece == Pawn && toSquare == mEpIndex )
-    mMoves[mMoveCount].flags = MoveEpCapture;
+    newMove.mFlags = MoveEpCapture;
 
-  if ( fromPiece == Pawn && ( ( getRow(toSquare) == 0 ) || ( getRow(toSquare) == 7) ) ) {
-    mMoves[mMoveCount].flags |= MovePromotion;
+  if ( fromPiece == Pawn && ( ( destRow == 0 ) || ( destRow == 7) ) ) {
+    newMove.mFlags |= MovePromotion;
     for (uchar promoPiece = Queen; promoPiece <= Knight; promoPiece++) {
-      mMoves[mMoveCount+promoPiece-1] = mMoves[mMoveCount];
-      mMoves[mMoveCount+promoPiece-1].toPiece = promoPiece;
+      newMove.mToPiece = promoPiece;
+      moveList.addMove(newMove);
     }
-    mMoveCount += 3;
   }
-  mMoveCount++;
+  else
+    moveList.addMove(newMove);
 }
 
 bool Board0x88::setPosition(const std::string & fenString)
@@ -691,33 +708,42 @@ bool Board0x88::setPosition(const std::string & fenString)
   return true;
 }
 
-void Board0x88::unmakeMove(const sMove &undoMove)
+void Board0x88::unmakeMove(const Move & undoMove)
 {
-  mPieces[undoMove.fromSquare] = undoMove.fromPiece;
-  mColors[undoMove.fromSquare] = !mSideToMove;
-  mPieces[undoMove.toSquare] = PieceEmpty;
-  mColors[undoMove.toSquare] = ColorEmpty;
+  uchar fromSquare = getIndex(undoMove.mSourceRow, undoMove.mSourceCol);
+  uchar toSquare = getIndex(undoMove.mDestRow, undoMove.mDestCol);
+  uchar fromPiece = undoMove.mFromPiece;
+  uchar flags = undoMove.mFlags;
 
-  mHalfMoveClock = undoMove.halfMove;
-  mEpIndex = undoMove.epIndex;
-  mCastlingRights = undoMove.castlingRights;
+  mPieces[fromSquare] = fromPiece;
+  mColors[fromSquare] = !mSideToMove;
+  mPieces[toSquare] = PieceEmpty;
+  mColors[toSquare] = ColorEmpty;
+  mHalfMoveClock = undoMove.mHalfMoveClock;
+  mCastlingRights = undoMove.mCastlingRights;
 
-  if (undoMove.flags & MoveCapture) {
-    mPieces[undoMove.toSquare] = undoMove.capturedPiece;
-    mColors[undoMove.toSquare] = mSideToMove;
+  uchar epCol = undoMove.mEnPassantCol;
+  if (epCol < 8) {
+    uchar epRow = (mSideToMove == White) ? 3 : 6;
+    mEpIndex = getIndex(epRow, epCol);
   }
 
-  if (undoMove.fromPiece == King)
-    mKingIndex[!mSideToMove] = undoMove.fromSquare;
+  if (flags & MoveCapture) {
+    mPieces[toSquare] = undoMove.mCapturePiece;
+    mColors[toSquare] = mSideToMove;
+  }
 
-  if (undoMove.flags & MoveEpCapture) {
+  if (fromPiece == King)
+    mKingIndex[!mSideToMove] = fromSquare;
+
+  if (flags & MoveEpCapture) {
     int dir = (mSideToMove == White) ? NORTH : SOUTH;
-    mPieces[undoMove.toSquare+dir] = Pawn;
-    mColors[undoMove.toSquare+dir] = mSideToMove;
+    mPieces[toSquare+dir] = Pawn;
+    mColors[toSquare+dir] = mSideToMove;
   }
 
-  if (undoMove.flags & MoveCastle) {
-    switch (undoMove.toSquare) {
+  if (flags & MoveCastle) {
+    switch (toSquare) {
     case C1:
       mPieces[A1] = Rook;
       mColors[A1] = White;
@@ -744,5 +770,6 @@ void Board0x88::unmakeMove(const sMove &undoMove)
       break;
     }
   }
+
   mSideToMove = !mSideToMove;
 }

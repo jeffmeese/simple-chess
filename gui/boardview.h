@@ -43,17 +43,17 @@ private:
   Piece showPromotionDialog();
 
 Q_SIGNALS:
-  //void moveCompleted(const Move & newMove);
-  void moveCompleted(const sMove & newMove);
+  void moveCompleted(const Move & newMove);
+  //void moveCompleted(const sMove & newMove);
 
 private:
   bool mPieceSelected;
   bool mShowValidMoves;
   uint mSelectedRow;
   uint mSelectedCol;
-  //MoveList mMoveList;
-  sMove mMoveList[256];
-  uchar mTotalMoves;
+  MoveList mMoveList;
+  //sMove mMoveList[256];
+  //uchar mTotalMoves;
   QColor mWhiteCellColor;
   QColor mBlackCellColor;
   QColor mSelectedCellColor;

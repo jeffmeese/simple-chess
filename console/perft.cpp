@@ -16,7 +16,7 @@ Perft::Perft(Board * board)
 
 void Perft::divide(uint perftDepth)
 {
-  sMove moveList[256];
+  MoveList moveList;
   uint totalMoves = mBoard->generateMoves(moveList);
 
   uint validMoves = 0;
@@ -26,7 +26,7 @@ void Perft::divide(uint perftDepth)
     if (!mBoard->isKingAttacked(!mBoard->sideToMove())) {
       ulonglong nodes = executePerft(perftDepth - 1);
 
-      std::string moveString = mBoard->getSmithNotation(moveList[i]);
+      std::string moveString = getSmithNotation(moveList[i]);
       std::cout << moveString << " " << nodes << "\n";
 
       totalNodes += nodes;
@@ -49,7 +49,7 @@ ulonglong Perft::executePerft(uint perftDepth)
   if (perftDepth == 0)
     return 1;
 
-  sMove moveList[256];
+  MoveList moveList;
   uchar totalMoves = mBoard->generateMoves(moveList);
 
   uint totalNodes = 0;

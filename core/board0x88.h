@@ -2,8 +2,6 @@
 #define BOARD0X88_H
 
 #include "types.h"
-#include "move.h"
-#include "piecetype.h"
 #include "stalematecondition.h"
 #include "array2d.h"
 
@@ -11,13 +9,16 @@
 #include <vector>
 #include <list>
 
-//#define USEMACROS
+#define USEMACROS
 #ifdef USEMACROS
 #define getIndex(row,col) ((row)*16+(col))
 #define getRow(index) ( (index >> 4) )
 #define getCol(index) ( (index & 7) )
 #define isValidSquare(x)  ( (x) & 0x88 ) ? (0) : (1)
 #endif // #ifdef USEMACROS
+
+class Move;
+class MoveList;
 
 class Board0x88
 {
@@ -38,31 +39,27 @@ public:
   uchar sideToMove() const;
 
 public:
-  uchar generateMoves(sMove * moveList);
-  uchar generateMoves(uchar row, uchar col, sMove * moveList);
-  std::string getSmithNotation(const sMove & move) const;
-  uchar getMoveDestinationCol(const sMove & move) const;
-  uchar getMoveDestinationRow(const sMove & move) const;
-  uchar getMoveSourceCol(const sMove & move) const;
-  uchar getMoveSourceRow(const sMove & move) const;
+  uchar generateMoves(MoveList & moveList);
+  uchar generateMoves(uchar row, uchar col, MoveList & moveList);
   bool isKingAttacked(uchar kingColor) const;
   bool isCellAttacked(uchar row, uchar col, uchar attackingColor) const;
   uchar kingRow(uchar color) const;
   uchar kingCol(uchar color) const;
-  void makeMove(const sMove & newMove);
-  bool setPosition(const std::string & fenString);
-  void unmakeMove(const sMove & undoMove);
+  void makeMove(const Move & newMove);
   PieceType pieceType(uchar row, uchar col) const;
+  bool setPosition(const std::string & fenString);
+  void unmakeMove(const Move & undoMove);
 
 private:
-  void generateCastlingMoves();
-  void generatePawnCaptures(uchar index);
-  void generatePawnMoves(uchar index);
+  void generateCastlingMoves(MoveList & moveList);
+  void generatePawnCaptures(uchar index, MoveList & moveList);
+  void generatePawnMoves(uchar index, MoveList & moveList);
   void initAttacks();
   void initBoard();
+  void initMoves();
   bool isCellAttacked(uchar index, uchar attackingColor) const;
   uchar kingIndex(uchar color) const;
-  void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, uchar flags);
+  void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, uchar flags, MoveList & moveList);
 
 #ifndef USEMACROS
   uchar getCol(uchar index) const;
@@ -91,8 +88,6 @@ private:
   Array2D<uchar> mStraightAttacks[4];
   Array2D<uchar> mDiagAttacks[4];
   Array2D<uchar> mDirectionVectors;
-  mutable uchar mMoveCount;
-  mutable sMove * mMoves;
 };
 
 //////////////////////////////////////////////////////////////
@@ -154,26 +149,6 @@ inline bool Board0x88::isValidSquare(uchar index) const
   return !(index & 0x88);
 }
 #endif // #ifndef USEMACROS
-
-inline uchar Board0x88::getMoveDestinationCol(const sMove & move) const
-{
-  return getCol(move.toSquare);
-}
-
-inline uchar Board0x88::getMoveDestinationRow(const sMove & move) const
-{
-  return getRow(move.toSquare);
-}
-
-inline uchar Board0x88::getMoveSourceCol(const sMove & move) const
-{
-  return getCol(move.fromSquare);
-}
-
-inline uchar Board0x88::getMoveSourceRow(const sMove & move) const
-{
-  return getRow(move.fromSquare);
-}
 
 inline int Board0x88::halfMoveClock() const
 {

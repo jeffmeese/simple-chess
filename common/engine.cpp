@@ -1,6 +1,7 @@
 #include "engine.h"
 
-//#include <cmath>
+#include <core/movelist.h>
+
 #include <iostream>
 
 static const int INFINITY = 1e10;
@@ -71,34 +72,23 @@ int Engine::evaluatePosition(Board * board)
   return materialScore;
 }
 
-bool Engine::getMove(Board * board, sMove & newMove)
+bool Engine::getMove(Board * board, Move & selectedMove)
 {
-  sMove moveList[256];
+  MoveList moveList;
   uchar totalMoves = board->generateMoves(moveList);
 
   std::cout << "\nEngine Move\n";
   int maxScore = -INFINITY;
   for (uchar i = 0; i < totalMoves; i++) {
-    sMove currentMove = moveList[i];
+    Move currentMove = moveList[i];
     board->makeMove(currentMove);
     if (!board->isKingAttacked(!board->sideToMove())) {
-      int score = -negaMax(board, 3);
+      int score = -negaMax(board, 4);
       if (score > maxScore) {
         maxScore = score;
-        newMove = currentMove;
+        selectedMove = currentMove;
       }
-
-      uint sourceRow = board->getMoveSourceRow(currentMove);
-      uint sourceCol = board->getMoveSourceCol(currentMove);
-      uint destRow = board->getMoveDestinationRow(currentMove);
-      uint destCol = board->getMoveDestinationCol(currentMove);
-      std::cout << "SR: " << sourceRow << " "
-                << "SC: " << sourceCol << " "
-                << "DR: " << destRow << " "
-                << "DC: " << destCol << " "
-                << "Score: :" << score << " "
-                << "Max Score: " << maxScore << "\n";
-
+      std::cout << "move: " << getSmithNotation(currentMove) << " score: " << score << " max: " << maxScore << "\n";
     }
     board->unmakeMove(currentMove);
   }
@@ -110,19 +100,17 @@ int Engine::negaMax(Board * board, int depth)
   if (depth == 0)
     return evaluatePosition(board);
 
-  sMove moveList[256];
+  MoveList moveList;
   uchar totalMoves = board->generateMoves(moveList);
 
   int maxScore = -INFINITY;
   for (uchar i = 0; i < totalMoves; i++) {
-    sMove currentMove = moveList[i];
+    Move currentMove = moveList[i];
     board->makeMove(currentMove);
     if (!board->isKingAttacked(!board->sideToMove())) {
       int score = -negaMax(board, depth-1);
       if (score > maxScore)
         maxScore = score;
-
-      //std::cout << "score: " << score << " " << "maxScore: " << maxScore << "\n";
     }
     board->unmakeMove(currentMove);
   }

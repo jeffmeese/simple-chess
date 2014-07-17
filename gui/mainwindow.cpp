@@ -25,9 +25,10 @@ MainWindow::MainWindow(Application & application, QWidget *parent)
   setCentralWidget(mBoardView.get());
 
   connect(mUi->actionStart_New_Game, SIGNAL(triggered()), SLOT(handleStartNewGame()));
+  connect(mUi->actionExit, SIGNAL(triggered()), SLOT(handleExit()));
   connect(mUi->actionUndo_Last_Move, SIGNAL(triggered()), SLOT(handleUndoLastMove()));
   connect(mUi->actionSet_Board_Position, SIGNAL(triggered()), SLOT(handleSetBoardPosition()));
-  connect(mBoardView.get(), SIGNAL(moveCompleted(const sMove&)), SLOT(handleMoveCompleted()));
+  connect(mBoardView.get(), SIGNAL(moveCompleted(const Move&)), SLOT(handleMoveCompleted()));
 }
 
 MainWindow::~MainWindow()
@@ -35,42 +36,45 @@ MainWindow::~MainWindow()
   delete mUi;
 }
 
+void MainWindow::handleExit()
+{
+  QApplication::quit();
+}
+
 void MainWindow::handleMoveCompleted()
 {
   update();
 
-  bool gameOver = false;
+  bool gameOver = mApplication.game()->isGameOver();
+  if (gameOver) {
 
-  bool isBlackMate = mApplication.game()->isBlackMated();
-  if (isBlackMate) {
-    QString message("Checkmate\r\nWhite wins\r\n\r\nWould you like to play again?");
-    QMessageBox::information(this, "Checkmate", message);
-    gameOver = true;
-  }
-
-  bool isWhiteMate = mApplication.game()->isWhiteMated();
-  if (isWhiteMate) {
-    QString message("Checkmate\r\nBlack wins\r\n\r\nWould you like to play again?");
-    QMessageBox::information(this, "Checkmate", message);
-    gameOver = true;
-  }
-
-  bool isStalemate = mApplication.game()->isStalemate();
-  if (isStalemate) {
-    QString message("Stalemate\r\nWould you like to play again?");
-    QMessageBox::information(this, "Stalemate", message);
-    gameOver = true;
-  }
-
-  if (!gameOver) {
-    bool blackMove = !mApplication.game()->isWhiteToMove();
-    if (blackMove) {
-      QApplication::setOverrideCursor(Qt::WaitCursor);
-      if (mApplication.game()->executeEngineMove()) {
-        handleMoveCompleted();
-      }
-      QApplication::restoreOverrideCursor();
+    bool isBlackMate = mApplication.game()->isBlackMated();
+    if (isBlackMate) {
+      QString message("Checkmate\r\nWhite wins\r\n\r\nWould you like to play again?");
+      QMessageBox::information(this, "Checkmate", message);
     }
+
+    bool isWhiteMate = mApplication.game()->isWhiteMated();
+    if (isWhiteMate) {
+      QString message("Checkmate\r\nBlack wins\r\n\r\nWould you like to play again?");
+      QMessageBox::information(this, "Checkmate", message);
+    }
+
+    bool isStalemate = mApplication.game()->isStalemate();
+    if (isStalemate) {
+      QString message("Stalemate\r\nWould you like to play again?");
+      QMessageBox::information(this, "Stalemate", message);
+    }
+    return;
+  }
+
+  bool blackMove = !mApplication.game()->isWhiteToMove();
+  if (blackMove) {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    if (mApplication.game()->executeEngineMove()) {
+      handleMoveCompleted();
+    }
+    QApplication::restoreOverrideCursor();
   }
 }
 

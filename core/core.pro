@@ -27,18 +27,17 @@ CONFIG(debug, debug|release) {
 
 SOURCES += \
     move.cpp \
-    piecetype.cpp \
     stopwatch.cpp \
     stopwatchholder.cpp \
     standardengine.cpp \
     board0x88.cpp \
     fen.cpp \
-    util.cpp
+    util.cpp \
+    movelist.cpp
 
 HEADERS +=\
     core_global.h \
     move.h \
-    piecetype.h \
     types.h \
     stopwatch.h \
     stopwatchholder.h \
@@ -47,4 +46,5 @@ HEADERS +=\
     board0x88.h \
     fen.h \
     array2d.h \
-    util.h
+    util.h \
+    movelist.h

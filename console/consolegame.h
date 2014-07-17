@@ -29,10 +29,9 @@ private:
   void handleTable(std::istringstream & iss) const;
   void handleTestMoveGen() const;
   void handleUndo();
-  bool isGameOver();
 
 private:
-  bool mGameOver;
+  void showEndGame();
 };
 
 #endif // #ifndef CONSOLE_GAME_H

@@ -7,7 +7,6 @@
 #include <memory>
 
 #include <core/types.h>
-#include <core/piecetype.h>
 
 class Move;
 class MoveList;
@@ -22,10 +21,11 @@ public:
   const Board * board() const;
 
 public:
-  bool doMove(const sMove & newMove);
+  bool doMove(const Move & newMove);
   bool executeEngineMove();
-  uchar generateMoves(uchar row, uchar col, sMove * moves);
+  uchar generateMoves(uchar row, uchar col, MoveList & moveList);
   bool isBlackMated() const;
+  bool isGameOver() const;
   bool isStalemate() const;
   bool isWhiteMated() const;
   bool isWhiteToMove() const;
@@ -37,13 +37,12 @@ private:
   void checkMateCondition();
 
 protected:
-  std::unique_ptr<Board> mBoard;
-  std::unique_ptr<Engine> mEngine;
   bool mWhiteMated;
   bool mBlackMated;
-  bool mGameOver;
-  sMove mCompletedMoves[256];
-  uchar mTotalCompletedMoves;
+  bool mStalemate;
+  std::unique_ptr<Board> mBoard;
+  std::unique_ptr<Engine> mEngine;
+  std::unique_ptr<MoveList> mCompletedMoves;
 };
 
 #endif // GAME_H

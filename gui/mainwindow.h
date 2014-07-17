@@ -22,6 +22,7 @@ public:
   ~MainWindow();
 
 private Q_SLOTS:
+  void handleExit();
   void handleMoveCompleted();
   void handleSetBoardPosition();
   void handleStartNewGame();
