@@ -68,14 +68,14 @@ void MainWindow::handleMoveCompleted()
     return;
   }
 
-  bool blackMove = !mApplication.game()->isWhiteToMove();
-  if (blackMove) {
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    if (mApplication.game()->executeEngineMove()) {
-      handleMoveCompleted();
-    }
-    QApplication::restoreOverrideCursor();
-  }
+//  bool blackMove = !mApplication.game()->isWhiteToMove();
+//  if (blackMove) {
+//    QApplication::setOverrideCursor(Qt::WaitCursor);
+//    if (mApplication.game()->executeEngineMove()) {
+//      handleMoveCompleted();
+//    }
+//    QApplication::restoreOverrideCursor();
+//  }
 }
 
 void MainWindow::handleSetBoardPosition()

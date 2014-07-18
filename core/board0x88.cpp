@@ -53,6 +53,7 @@ Board0x88::~Board0x88(void)
 
 void Board0x88::generateCastlingMoves(MoveList & moveList)
 {
+  //std::cout << "Castling\n";
   if (mSideToMove == White) {
     if (mCastlingRights & CastleWhiteKing) {
       if (mPieces[F1] == PieceEmpty &&
@@ -103,6 +104,8 @@ void Board0x88::generateCastlingMoves(MoveList & moveList)
 
 uchar Board0x88::generateMoves(MoveList & moveList)
 {
+  std::cout << "Start: " << (int)mEpIndex << "\n";
+
   generateCastlingMoves(moveList);
 
   for (uchar i = 0; i < 8; i++) {
@@ -117,6 +120,7 @@ uchar Board0x88::generateMoves(MoveList & moveList)
         }
         else {
           uchar pieceType = mPieces[index];
+          //std::cout << (int)pieceType << "\n";
           for (uchar num = 0; num < mNumDirections[pieceType]; num++) {
             for (uchar pos = index;;) {
               pos = pos + mDirectionVectors(pieceType, num);
@@ -125,9 +129,12 @@ uchar Board0x88::generateMoves(MoveList & moveList)
                 break;
 
               if (mColors[pos] == ColorEmpty) {  // Standard move
+                //std::cout << "Standard Move\n";
+                std::cout << "Standard: " << (int)mEpIndex << "\n";
                 pushMove(index, pos, pieceType, PieceEmpty, MoveNormal, moveList);
               }
               else if (mColors[pos] != mSideToMove) { // Capture move
+                std::cout << "Capture: " << (int)mEpIndex << "\n";
                 pushMove(index, pos, pieceType, mPieces[pos], MoveCapture, moveList);
                 break;
               }
@@ -166,8 +173,20 @@ uchar Board0x88::generateMoves(uchar row, uchar col, MoveList & moveList)
   return moveList.size();
 }
 
+uchar Board0x88::generateOpponentMoves(MoveList & moveList)
+{
+  uchar sideToMove = mSideToMove;
+  mSideToMove = !mSideToMove;
+  generateMoves(moveList);
+  mSideToMove = sideToMove;
+  return moveList.size();
+}
+
 void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
 {
+  //std::cout << "Pawn Captures\n";
+
+  std::cout << "PC: " << (int)mEpIndex << "\n";
   if (mSideToMove == White) {
     if (isValidSquare(index+NW) && ( (mEpIndex == index+NW ) || mColors[index+NW] == Black ) )
       pushMove(index, index+NW, Pawn, mPieces[index+NW], MoveCapture, moveList);
@@ -175,6 +194,7 @@ void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
       pushMove(index, index+NE, Pawn, mPieces[index+NE], MoveCapture, moveList);
   }
   else {
+    //std::cout << (int)mEpIndex << "\n";
     if (isValidSquare(index+SW) && ( (mEpIndex == index+SW ) || mColors[index+SW] == White ) )
       pushMove(index, index+SW, Pawn, mPieces[index+SW], MoveCapture, moveList);
     if (isValidSquare(index+SE) && ( (mEpIndex == index+SE ) || mColors[index+SE] == White ) )
@@ -184,6 +204,8 @@ void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
 
 void Board0x88::generatePawnMoves(uchar index, MoveList & moveList)
 {
+  //std::cout << "Pawn Moves\n";
+
   char dir = NORTH;
   char epRow = 1;
   if (mSideToMove == Black) {
@@ -533,6 +555,7 @@ void Board0x88::makeMove(const Move & newMove)
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
     mEpIndex = toSquare + dir;
   }
+  std::cout << "Make: " << (int)mEpIndex << "\n";
 
   // Handle en-passant capture
   if (newMove.mFlags & MoveEpCapture) {
@@ -583,7 +606,8 @@ void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, ucha
   uchar sourceCol = getCol(fromSquare);
   uchar destRow = getRow(toSquare);
   uchar destCol = getCol(toSquare);
-  uchar epCol = getCol(mEpIndex);
+  uchar epCol = (mEpIndex != 0x7f) ? getCol(mEpIndex) : 8;
+  std::cout << "Push: " << (int)epCol << "\n";
 
   Move newMove;
   newMove.mSourceRow = sourceRow;
@@ -727,6 +751,7 @@ void Board0x88::unmakeMove(const Move & undoMove)
     uchar epRow = (mSideToMove == White) ? 3 : 6;
     mEpIndex = getIndex(epRow, epCol);
   }
+  std::cout << "Unmake: " << (int)mEpIndex << "\n";
 
   if (flags & MoveCapture) {
     mPieces[toSquare] = undoMove.mCapturePiece;

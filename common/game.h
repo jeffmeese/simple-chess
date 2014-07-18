@@ -8,6 +8,13 @@
 
 #include <core/types.h>
 
+enum GameType
+{
+  HumanVsComputer,
+  ComputerVsHuman,
+  HumanVsHuman
+};
+
 class Move;
 class MoveList;
 
@@ -19,6 +26,8 @@ public:
 
 public:
   const Board * board() const;
+  GameType gameType() const;
+  void setGameType(GameType gameType);
 
 public:
   bool doMove(const Move & newMove);
@@ -40,6 +49,7 @@ protected:
   bool mWhiteMated;
   bool mBlackMated;
   bool mStalemate;
+  GameType mGameType;
   std::unique_ptr<Board> mBoard;
   std::unique_ptr<Engine> mEngine;
   std::unique_ptr<MoveList> mCompletedMoves;

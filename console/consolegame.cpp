@@ -116,10 +116,18 @@ void ConsoleGame::handleMove(std::istringstream & iss)
     return;
   }
 
-  executeEngineMove();
-  if (isGameOver()) {
-    showEndGame();
-    return;
+  bool doEngineMove = false;
+  if (gameType() == HumanVsComputer && !isWhiteToMove())
+    doEngineMove = true;
+  if (gameType() == ComputerVsHuman && isWhiteToMove())
+    doEngineMove = true;
+
+  if (doEngineMove) {
+    executeEngineMove();
+    handlePrint();
+    if (isGameOver()) {
+      showEndGame();
+    }
   }
 }
 
@@ -343,6 +351,11 @@ void ConsoleGame::handleSetBoard(std::istringstream & iss)
   setBoardPosition(fenString);
 }
 
+void ConsoleGame::handleSinglePlayer()
+{
+  setGameType(HumanVsComputer);
+}
+
 void ConsoleGame::handleTable(std::istringstream & iss) const
 {
 //  uint perftLevel = readLevel(iss);
@@ -448,6 +461,11 @@ void ConsoleGame::handleTestMoveGen() const
   }
 }
 
+void ConsoleGame::handleTwoPlayer()
+{
+  setGameType(HumanVsHuman);
+}
+
 void ConsoleGame::handleUndo()
 {
   undoLastMove();
@@ -500,6 +518,10 @@ int ConsoleGame::run()
       handleShow();
     else if (commandString == "undo")
       handleUndo();
+    else if (commandString == "twoplayer")
+      handleTwoPlayer();
+    else if (commandString == "singleplayer")
+      handleSinglePlayer();
     else {
       std::cout << "Unrecognized command " << commandString << "\n";
       std::cout << "Type help to show command list\n";

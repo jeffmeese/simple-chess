@@ -26,8 +26,10 @@ private:
   void handlePrint() const;
   void handleSetBoard(std::istringstream & iss);
   void handleShow() const;
+  void handleSinglePlayer();
   void handleTable(std::istringstream & iss) const;
   void handleTestMoveGen() const;
+  void handleTwoPlayer();
   void handleUndo();
 
 private:

@@ -40,6 +40,7 @@ public:
 
 public:
   uchar generateMoves(MoveList & moveList);
+  uchar generateOpponentMoves(MoveList & moveList);
   uchar generateMoves(uchar row, uchar col, MoveList & moveList);
   bool isKingAttacked(uchar kingColor) const;
   bool isCellAttacked(uchar row, uchar col, uchar attackingColor) const;

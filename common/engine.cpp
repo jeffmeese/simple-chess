@@ -1,7 +1,5 @@
 #include "engine.h"
 
-#include <core/movelist.h>
-
 #include <iostream>
 
 static const int INFINITY = 1e10;
@@ -13,13 +11,14 @@ static const int QueenWeight = 950;
 static const int KingWeight = 1950;
 
 Engine::Engine()
+  : mMaxDepth(3)
 {
   srand((unsigned int)time(NULL));
 }
 
-int Engine::evaluatePosition(Board * board)
+double Engine::evaluatePosition(Board * board)
 {
-  int materialScore = 0;
+  double materialScore = 0;
   for (uint row = 0; row < 8; row++) {
     for (uint col = 0; col < 8; col++) {
       PieceType pieceType = board->pieceType(row, col);
@@ -65,52 +64,125 @@ int Engine::evaluatePosition(Board * board)
       }
     }
   }
-  if ( !board->isWhiteToMove())
-    materialScore = -materialScore;
 
-  //std::cout << "material score: " << materialScore << "\n";
-  return materialScore;
+  //if ( board->isWhiteToMove())
+  //  materialScore = -materialScore;
+
+  MoveList moveList;
+  uchar sideMobility = board->generateMoves(moveList);
+  uchar opponentMobility = board->generateOpponentMoves(moveList);
+//  double whiteMobility = sideMobility;
+//  double blackMobility = opponentMobility;
+//  if (!board->isWhiteToMove()) {
+//    whiteMobility = opponentMobility;
+//    blackMobility = sideMobility;
+//  }
+
+  double mobilityScore = (sideMobility - opponentMobility);
+  double totalScore = materialScore + 0.1*mobilityScore;
+  if (!board->isWhiteToMove())
+    totalScore = -totalScore;
+
+  return totalScore;
 }
 
 bool Engine::getMove(Board * board, Move & selectedMove)
 {
+  mEngineFile.open("debug/engine.dat");
+
   MoveList moveList;
   uchar totalMoves = board->generateMoves(moveList);
 
   std::cout << "\nEngine Move\n";
-  int maxScore = -INFINITY;
+  double maxScore = -INFINITY;
+  mCurrentLine.clear();
+  mScoreVector.clear();
   for (uchar i = 0; i < totalMoves; i++) {
     Move currentMove = moveList[i];
+
     board->makeMove(currentMove);
     if (!board->isKingAttacked(!board->sideToMove())) {
-      int score = -negaMax(board, 4);
+      mCurrentLine.addMove(currentMove);
+      //mEngineFile << getSmithNotation(currentMove) << "\n";
+      double score = negaMax(board, mMaxDepth);
+      //mEngineFile <<  "Score: " << score << "\n";
       if (score > maxScore) {
         maxScore = score;
         selectedMove = currentMove;
       }
-      std::cout << "move: " << getSmithNotation(currentMove) << " score: " << score << " max: " << maxScore << "\n";
+      for (uchar i = 0; i < mCurrentLine.size(); i++) {
+        if (i > 0) mEngineFile << "-";
+        mEngineFile << getSmithNotation(mCurrentLine[i]);
+      }
+      mEngineFile << " " << score << "\n";
+      mCurrentLine.removeLast();
     }
     board->unmakeMove(currentMove);
   }
+
+  mEngineFile.close();
   return true;
 }
 
-int Engine::negaMax(Board * board, int depth)
+double Engine::negaMax(Board * board, int depth)
 {
-  if (depth == 0)
-    return evaluatePosition(board);
+  if (depth == 0) {
+
+    double finalScore = evaluatePosition(board);
+    //for (int i = 0; i < mMaxDepth; i++) mEngineFile << "  ";
+    //mEngineFile << " Score: " << finalScore << "\n";
+    //mEngineFile << " Score: " << finalScore << "\n";
+    //std::cout << "Best Line: ";
+//    for (uchar i = 0; i < mCurrentLine.size(); i++) {
+//      if (i > 0) mEngineFile << "-";
+//      mEngineFile << getSmithNotation(mCurrentLine[i]);
+//    }
+//    mEngineFile << " " << finalScore << "\n";
+    //std::cout << " Score: " << finalScore << "\n";
+
+//    if (finalScore > mMaxScore) {
+//      //mMaxScore = finalScore;
+//      //std::cout << "Best Line: ";
+//      for (uchar i = 0; i < mCurrentLine.size(); i++) {
+//        //if (i > 0) std::cout << "-";
+//        //std::cout << getSmithNotation(mCurrentLine[i]);
+//      }
+//      //std::cout << " Score: " << finalScore << "\n";
+//    }
+
+    return finalScore;
+  }
 
   MoveList moveList;
   uchar totalMoves = board->generateMoves(moveList);
 
-  int maxScore = -INFINITY;
+  double maxScore = -INFINITY;
   for (uchar i = 0; i < totalMoves; i++) {
     Move currentMove = moveList[i];
+
     board->makeMove(currentMove);
     if (!board->isKingAttacked(!board->sideToMove())) {
-      int score = -negaMax(board, depth-1);
-      if (score > maxScore)
+      mCurrentLine.addMove(currentMove);
+
+      //for (int i = 0; i < mMaxDepth - (depth-1); i++) mEngineFile << "  ";
+      //mEngineFile << getSmithNotation(currentMove) << "\n";
+      //mEngineFile << "-" << getSmithNotation(currentMove);
+
+      double score = -negaMax(board, depth-1);
+      if (score > maxScore) {
         maxScore = score;
+      }
+
+//      for (int i = 0; i < mMaxDepth - (depth-1); i++) mEngineFile << "  ";
+//      for (uchar i = 0; i < mCurrentLine.size(); i++) {
+//        if (i > 0) mEngineFile << "-";
+//        mEngineFile << getSmithNotation(mCurrentLine[i]);
+//      }
+//      mEngineFile << " " << score << "\n";
+
+
+      //mEngineFile <<  "Score: " << score << "\n";
+      mCurrentLine.removeLast();
     }
     board->unmakeMove(currentMove);
   }

@@ -9,6 +9,7 @@ Game::Game()
   : mWhiteMated(false)
   , mBlackMated(false)
   , mStalemate(false)
+  , mGameType(HumanVsComputer)
   , mBoard(new Board)
   , mEngine(new Engine)
   , mCompletedMoves(new MoveList)
@@ -80,6 +81,11 @@ bool Game::executeEngineMove()
   return true;
 }
 
+GameType Game::gameType() const
+{
+  return mGameType;
+}
+
 uchar Game::generateMoves(uchar row, uchar col, MoveList & moveList)
 {
   return mBoard->generateMoves(row, col, moveList);
@@ -117,6 +123,11 @@ bool Game::setBoardPosition(const std::string &fenString)
 
   mCompletedMoves->clear();
   return true;
+}
+
+void Game::setGameType(GameType gameType)
+{
+  mGameType = gameType;
 }
 
 void Game::startNewGame()
