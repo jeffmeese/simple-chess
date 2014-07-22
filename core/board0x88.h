@@ -36,16 +36,16 @@ public:
   int fullMoveCounter() const;
   int halfMoveClock() const;
   bool isWhiteToMove() const;
-  uchar sideToMove() const;
+  char sideToMove() const;
 
 public:
   uchar generateMoves(MoveList & moveList);
   uchar generateOpponentMoves(MoveList & moveList);
   uchar generateMoves(uchar row, uchar col, MoveList & moveList);
-  bool isKingAttacked(uchar kingColor) const;
-  bool isCellAttacked(uchar row, uchar col, uchar attackingColor) const;
-  uchar kingRow(uchar color) const;
-  uchar kingCol(uchar color) const;
+  bool isKingAttacked(char kingColor) const;
+  bool isCellAttacked(uchar row, uchar col, char attackingColor) const;
+  uchar kingRow(char color) const;
+  uchar kingCol(char color) const;
   void makeMove(const Move & newMove);
   PieceType pieceType(uchar row, uchar col) const;
   bool setPosition(const std::string & fenString);
@@ -58,9 +58,9 @@ private:
   void initAttacks();
   void initBoard();
   void initMoves();
-  bool isCellAttacked(uchar index, uchar attackingColor) const;
-  uchar kingIndex(uchar color) const;
-  void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, uchar flags, MoveList & moveList);
+  bool isCellAttacked(uchar index, char attackingColor) const;
+  uchar kingIndex(char color) const;
+  void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, char flags, MoveList & moveList);
 
 #ifndef USEMACROS
   uchar getCol(uchar index) const;
@@ -70,11 +70,11 @@ private:
 #endif // #ifndef USEMACROS
 
 private:
-  uchar mSideToMove;
-  uchar mCastlingRights;
+  char mSideToMove;
+  char mCastlingRights;
+  char mEpIndex;
   uchar mHalfMoveClock;
   uchar mFullMoveCounter;
-  uchar mEpIndex;
   uchar mKingIndex[2];
   uchar mPieces[128];
   uchar mColors[128];
@@ -156,27 +156,27 @@ inline int Board0x88::halfMoveClock() const
   return mHalfMoveClock;
 }
 
-inline bool Board0x88::isCellAttacked(uchar row, uchar col, uchar attackingColor) const
+inline bool Board0x88::isCellAttacked(uchar row, uchar col, char attackingColor) const
 {
   return isCellAttacked(getIndex(row, col), attackingColor);
 }
 
-inline bool Board0x88::isKingAttacked(uchar kingColor) const
+inline bool Board0x88::isKingAttacked(char kingColor) const
 {
   return isCellAttacked(kingIndex(kingColor), !kingColor);
 }
 
-inline uchar Board0x88::kingRow(uchar color) const
+inline uchar Board0x88::kingRow(char color) const
 {
   return getRow(kingIndex(color));
 }
 
-inline uchar Board0x88::kingIndex(uchar color) const
+inline uchar Board0x88::kingIndex(char color) const
 {
   return mKingIndex[color];
 }
 
-inline uchar Board0x88::kingCol(uchar color) const
+inline uchar Board0x88::kingCol(char color) const
 {
   return getCol(kingIndex(color));
 }
@@ -186,7 +186,7 @@ inline bool Board0x88::isWhiteToMove() const
   return (mSideToMove == White);
 }
 
-inline uchar Board0x88::sideToMove() const
+inline char Board0x88::sideToMove() const
 {
   return mSideToMove;
 }

@@ -53,7 +53,6 @@ Board0x88::~Board0x88(void)
 
 void Board0x88::generateCastlingMoves(MoveList & moveList)
 {
-  //std::cout << "Castling\n";
   if (mSideToMove == White) {
     if (mCastlingRights & CastleWhiteKing) {
       if (mPieces[F1] == PieceEmpty &&
@@ -104,8 +103,6 @@ void Board0x88::generateCastlingMoves(MoveList & moveList)
 
 uchar Board0x88::generateMoves(MoveList & moveList)
 {
-  std::cout << "Start: " << (int)mEpIndex << "\n";
-
   generateCastlingMoves(moveList);
 
   for (uchar i = 0; i < 8; i++) {
@@ -120,7 +117,6 @@ uchar Board0x88::generateMoves(MoveList & moveList)
         }
         else {
           uchar pieceType = mPieces[index];
-          //std::cout << (int)pieceType << "\n";
           for (uchar num = 0; num < mNumDirections[pieceType]; num++) {
             for (uchar pos = index;;) {
               pos = pos + mDirectionVectors(pieceType, num);
@@ -129,12 +125,9 @@ uchar Board0x88::generateMoves(MoveList & moveList)
                 break;
 
               if (mColors[pos] == ColorEmpty) {  // Standard move
-                //std::cout << "Standard Move\n";
-                std::cout << "Standard: " << (int)mEpIndex << "\n";
                 pushMove(index, pos, pieceType, PieceEmpty, MoveNormal, moveList);
               }
               else if (mColors[pos] != mSideToMove) { // Capture move
-                std::cout << "Capture: " << (int)mEpIndex << "\n";
                 pushMove(index, pos, pieceType, mPieces[pos], MoveCapture, moveList);
                 break;
               }
@@ -154,7 +147,7 @@ uchar Board0x88::generateMoves(MoveList & moveList)
   return moveList.size();
 }
 
-// This function should not be called by engines
+// This function should not be called by engines, it would be greatly inefficient
 // It exists simply to find the legal moves for a particular
 // square, such as is needed when running in a GUI
 uchar Board0x88::generateMoves(uchar row, uchar col, MoveList & moveList)
@@ -184,9 +177,6 @@ uchar Board0x88::generateOpponentMoves(MoveList & moveList)
 
 void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
 {
-  //std::cout << "Pawn Captures\n";
-
-  std::cout << "PC: " << (int)mEpIndex << "\n";
   if (mSideToMove == White) {
     if (isValidSquare(index+NW) && ( (mEpIndex == index+NW ) || mColors[index+NW] == Black ) )
       pushMove(index, index+NW, Pawn, mPieces[index+NW], MoveCapture, moveList);
@@ -194,7 +184,6 @@ void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
       pushMove(index, index+NE, Pawn, mPieces[index+NE], MoveCapture, moveList);
   }
   else {
-    //std::cout << (int)mEpIndex << "\n";
     if (isValidSquare(index+SW) && ( (mEpIndex == index+SW ) || mColors[index+SW] == White ) )
       pushMove(index, index+SW, Pawn, mPieces[index+SW], MoveCapture, moveList);
     if (isValidSquare(index+SE) && ( (mEpIndex == index+SE ) || mColors[index+SE] == White ) )
@@ -204,14 +193,8 @@ void Board0x88::generatePawnCaptures(uchar index, MoveList & moveList)
 
 void Board0x88::generatePawnMoves(uchar index, MoveList & moveList)
 {
-  //std::cout << "Pawn Moves\n";
-
-  char dir = NORTH;
-  char epRow = 1;
-  if (mSideToMove == Black) {
-    dir = SOUTH;
-    epRow = 6;
-  }
+  char dir = (mSideToMove == White) ? NORTH : SOUTH;
+  char epRow = (mSideToMove == White) ? 1 : 6;
 
   if (mPieces[index+dir] == PieceEmpty) {
     pushMove(index, index+dir, Pawn, PieceEmpty, MoveNormal, moveList);
@@ -290,8 +273,7 @@ void Board0x88::initBoard()
 {
   static const Piece pieces[] = { Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook };
 
-   mDirectionVectors.resize(5, 8);
-
+  mDirectionVectors.resize(5, 8);
   for (int i = 0; i < 5; i++) {
     mSliders[i] = sliders[i];
     mNumDirections[i] = numDirections[i];
@@ -300,7 +282,7 @@ void Board0x88::initBoard()
     }
   }
 
-  mEpIndex = 0x7f;
+  mEpIndex = -1;
   mSideToMove = White;
   mHalfMoveClock = 0;
   mFullMoveCounter = 0;
@@ -331,7 +313,7 @@ void Board0x88::initMoves()
 
 }
 
-bool Board0x88::isCellAttacked(uchar index, uchar attackingColor) const
+bool Board0x88::isCellAttacked(uchar index, char attackingColor) const
 {
   // Pawn attacks
   if (attackingColor == White) {
@@ -550,12 +532,11 @@ void Board0x88::makeMove(const Move & newMove)
   }
 
   // Update the en-passant index
-  mEpIndex = 0x7f;
+  mEpIndex = -1;
   if (newMove.mFlags & MoveEp) {
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
     mEpIndex = toSquare + dir;
   }
-  std::cout << "Make: " << (int)mEpIndex << "\n";
 
   // Handle en-passant capture
   if (newMove.mFlags & MoveEpCapture) {
@@ -600,14 +581,13 @@ PieceType Board0x88::pieceType(uchar row, uchar col) const
   return type;
 }
 
-void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, uchar capturePiece, uchar flags, MoveList & moveList)
+void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, uchar capturePiece, char flags, MoveList & moveList)
 {
   uchar sourceRow = getRow(fromSquare);
   uchar sourceCol = getCol(fromSquare);
   uchar destRow = getRow(toSquare);
   uchar destCol = getCol(toSquare);
-  uchar epCol = (mEpIndex != 0x7f) ? getCol(mEpIndex) : 8;
-  std::cout << "Push: " << (int)epCol << "\n";
+  char epCol = (mEpIndex != -1) ? getCol(mEpIndex) : -1;
 
   Move newMove;
   newMove.mSourceRow = sourceRow;
@@ -734,6 +714,8 @@ bool Board0x88::setPosition(const std::string & fenString)
 
 void Board0x88::unmakeMove(const Move & undoMove)
 {
+  static const uchar epRow[] = {2, 5};
+
   uchar fromSquare = getIndex(undoMove.mSourceRow, undoMove.mSourceCol);
   uchar toSquare = getIndex(undoMove.mDestRow, undoMove.mDestCol);
   uchar fromPiece = undoMove.mFromPiece;
@@ -746,12 +728,10 @@ void Board0x88::unmakeMove(const Move & undoMove)
   mHalfMoveClock = undoMove.mHalfMoveClock;
   mCastlingRights = undoMove.mCastlingRights;
 
-  uchar epCol = undoMove.mEnPassantCol;
-  if (epCol < 8) {
-    uchar epRow = (mSideToMove == White) ? 3 : 6;
-    mEpIndex = getIndex(epRow, epCol);
+  if (undoMove.mEnPassantCol >= 0) {
+    //uchar epRow = (mSideToMove == White) ? 2 : 5;
+    mEpIndex = getIndex(epRow[mSideToMove], undoMove.mEnPassantCol);
   }
-  std::cout << "Unmake: " << (int)mEpIndex << "\n";
 
   if (flags & MoveCapture) {
     mPieces[toSquare] = undoMove.mCapturePiece;

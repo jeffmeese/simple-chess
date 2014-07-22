@@ -14,10 +14,10 @@ struct Move
   uchar mFromPiece;
   uchar mToPiece;
   uchar mCapturePiece;
-  uchar mCastlingRights;
   uchar mHalfMoveClock;
-  uchar mEnPassantCol;
-  uchar mFlags;
+  char mEnPassantCol;
+  char mCastlingRights;
+  char mFlags;
 };
 
 std::string getSmithNotation(const Move & move);
