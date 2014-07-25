@@ -8,7 +8,7 @@ std::string getSmithNotation(const Move & move)
 {
   static const char colLetter[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
   std::stringstream oss;
-  oss << colLetter[move.mSourceCol] << (move.mSourceRow+1) << colLetter[move.mDestCol] << (move.mDestRow+1);
+  oss << colLetter[move.sourceCol] << (move.sourceRow+1) << colLetter[move.destCol] << (move.destRow+1);
   return oss.str();
 }
 

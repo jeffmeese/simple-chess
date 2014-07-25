@@ -19,6 +19,16 @@ ConsoleGame::~ConsoleGame()
 {
 }
 
+void ConsoleGame::doPerft(int perftLevel) const
+{
+  Perft perft(mBoard.get());
+
+  Stopwatch stopWatch(true);
+  ulonglong totalNodes = perft.execute(perftLevel);
+  std::string timeString = stopWatch.timeElapsedString();
+  std::cout << "Total Nodes: " << totalNodes << " Time: " << timeString << "\n";
+}
+
 void ConsoleGame::handleHelp() const
 {
   std::cout << "quit.................Quits the program\n";
@@ -92,10 +102,10 @@ void ConsoleGame::handleMove(std::istringstream & iss)
   uchar totalMoves = mBoard->generateMoves(moveList);
   for (uchar i = 0; i < totalMoves; i++) {
     Move move = moveList[i];
-    uchar sourceRow = move.mSourceRow;
-    uchar sourceCol = move.mSourceCol;
-    uchar destRow = move.mDestRow;
-    uchar destCol = move.mDestCol;
+    uchar sourceRow = move.sourceRow;
+    uchar sourceCol = move.sourceCol;
+    uchar destRow = move.destRow;
+    uchar destCol = move.destCol;
     if (srcRow == sourceRow && dstRow == destRow && srcCol == sourceCol && dstCol == destCol) {
       moveIndex = i;
       moveFound = true;
@@ -117,10 +127,10 @@ void ConsoleGame::handleMove(std::istringstream & iss)
   }
 
   bool doEngineMove = false;
-  if (gameType() == HumanVsComputer && !isWhiteToMove())
-    doEngineMove = true;
-  if (gameType() == ComputerVsHuman && isWhiteToMove())
-    doEngineMove = true;
+//  if (gameType() == HumanVsComputer && !isWhiteToMove())
+//    doEngineMove = true;
+//  if (gameType() == ComputerVsHuman && isWhiteToMove())
+//    doEngineMove = true;
 
   if (doEngineMove) {
     executeEngineMove();
@@ -203,16 +213,29 @@ void ConsoleGame::handleFen() const
   oss << " " << (mBoard->sideToMove() == White ? "w" : "b");
 
   std::string castleString;
-  if (mBoard->canWhiteCastleKingSide())
+  uchar castlingRights = mBoard->castlingRights();
+  std::cout << " Castling: ";
+  if (castlingRights & CastleWhiteKing)
     castleString += "K";
-  if (mBoard->canWhiteCastleQueenSide())
+  if (castlingRights & CastleWhiteQueen)
     castleString += "Q";
-  if (mBoard->canBlackCastleKingSide())
+  if (castlingRights & CastleBlackKing)
     castleString += "k";
-  if (mBoard->canBlackCastleQueenSide())
+  if (castlingRights & CastleBlackQueen)
     castleString += "q";
   if (castleString.empty())
     castleString += "-";
+
+//  if (mBoard->canWhiteCastleKingSide())
+//    castleString += "K";
+//  if (mBoard->canWhiteCastleQueenSide())
+//    castleString += "Q";
+//  if (mBoard->canBlackCastleKingSide())
+//    castleString += "k";
+//  if (mBoard->canBlackCastleQueenSide())
+//    castleString += "q";
+//  if (castleString.empty())
+//    castleString += "-";
 
   oss << " " << castleString;
 
@@ -271,12 +294,7 @@ void ConsoleGame::handlePerft(std::istringstream & iss) const
   if (perftLevel == 0)
     return;
 
-  Perft perft(mBoard.get());
-
-  Stopwatch stopWatch(true);
-  ulonglong totalNodes = perft.execute(perftLevel);
-  std::string timeString = stopWatch.timeElapsedString();
-  std::cout << "Total Nodes: " << totalNodes << " Time: " << timeString << "\n";
+  doPerft(perftLevel);
 }
 
 void ConsoleGame::handleShow() const
@@ -319,14 +337,15 @@ void ConsoleGame::handlePrint() const
           std::cout << " To Move: " << ( mBoard->sideToMove() == White ? "White" : "Black");
 
         if (row == 6) {
+          uchar castlingRights = mBoard->castlingRights();
           std::cout << " Castling: ";
-          if (mBoard->canWhiteCastleKingSide())
+          if (castlingRights & CastleWhiteKing)
             std::cout << "K";
-          if (mBoard->canWhiteCastleQueenSide())
+          if (castlingRights & CastleWhiteQueen)
             std::cout << "Q";
-          if (mBoard->canBlackCastleKingSide())
+          if (castlingRights & CastleBlackKing)
             std::cout << "k";
-          if (mBoard->canBlackCastleQueenSide())
+          if (castlingRights & CastleBlackQueen)
             std::cout << "q";
         }
       }

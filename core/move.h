@@ -7,17 +7,17 @@
 
 struct Move
 {
-  uchar mSourceRow;
-  uchar mSourceCol;
-  uchar mDestRow;
-  uchar mDestCol;
-  uchar mFromPiece;
-  uchar mToPiece;
-  uchar mCapturePiece;
-  uchar mHalfMoveClock;
-  char mEnPassantCol;
-  char mCastlingRights;
-  char mFlags;
+  uchar sourceRow;
+  uchar sourceCol;
+  uchar destRow;
+  uchar destCol;
+  uchar fromPiece;
+  uchar toPiece;
+  uchar capturePiece;
+  uchar halfMoveClock;
+  char enPassantCol;
+  char castlingRights;
+  char flags;
 };
 
 std::string getSmithNotation(const Move & move);

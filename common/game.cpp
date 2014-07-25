@@ -65,8 +65,8 @@ void Game::checkMateCondition()
 bool Game::doMove(const Move & newMove)
 {
   mBoard->makeMove(newMove);
-  mCompletedMoves->addMove(newMove);
-  checkMateCondition();
+  //mCompletedMoves->addMove(newMove);
+  //checkMateCondition();
   return true;
 }
 

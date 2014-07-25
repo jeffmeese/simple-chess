@@ -93,17 +93,17 @@ void BoardView::drawBoard(QPainter &painter, const QRect & boardRect)
       //uchar destRow = mGame->board()->getMoveDestinationRow(move);
       //uchar destCol = mGame->board()->getMoveDestinationCol(move);
       Move move = mMoveList[i];
-      uchar destRow = move.mDestRow;
-      uchar destCol = move.mDestCol;
+      uchar destRow = move.destRow;
+      uchar destCol = move.destCol;
 
       QRect cellRect;
       getCellRect(destRow, destCol, cellWidth, cellHeight, boardRect, cellRect);
 
       QColor cellColor = mValidMoveCellColor;
-      if (move.mFlags & MoveCapture)
+      if (move.flags & MoveCapture)
         cellColor = mAttackedCellColor;
 
-      if (move.mFlags & MoveEpCapture)
+      if (move.flags & MoveEpCapture)
         cellColor = mEnPassantCellColor;
 
       QBrush cellBrush(cellColor);
@@ -176,8 +176,8 @@ bool BoardView::isValidDestination(uchar row, uchar col)
 //    uchar destRow = mGame->board()->getMoveDestinationRow(move);
 //    uchar destCol = mGame->board()->getMoveDestinationCol(move);
     Move move = mMoveList[i];
-    uchar destRow = move.mDestRow;
-    uchar destCol = move.mDestCol;
+    uchar destRow = move.destRow;
+    uchar destCol = move.destCol;
     if (row == destRow && col == destCol)
       return true;
   }
@@ -262,24 +262,19 @@ void BoardView::paintEvent(QPaintEvent *paintEvent)
 bool BoardView::movePiece(uchar sourceRow, uchar sourceCol, uchar destRow, uchar destCol)
 {
   for (uint i = 0; i < mMoveList.size(); i++) {
-//    sMove move = mMoveList[i];
-//    uchar moveSourceRow = mGame->board()->getMoveSourceRow(move);
-//    uchar moveSourceCol = mGame->board()->getMoveSourceCol(move);
-//    uchar moveDestRow = mGame->board()->getMoveDestinationRow(move);
-//    uchar moveDestCol = mGame->board()->getMoveDestinationCol(move);
     Move move = mMoveList[i];
-    uchar moveSourceRow = move.mSourceRow;
-    uchar moveSourceCol = move.mSourceCol;
-    uchar moveDestRow = move.mDestRow;
-    uchar moveDestCol = move.mDestCol;
+    uchar moveSourceRow = move.sourceRow;
+    uchar moveSourceCol = move.sourceCol;
+    uchar moveDestRow = move.destRow;
+    uchar moveDestCol = move.destCol;
     if (moveSourceRow == sourceRow && moveSourceCol == sourceCol && moveDestRow == destRow && moveDestCol == destCol) {
 
-      if (move.mFlags & MovePromotion) {
+      if (move.flags & MovePromotion) {
         Piece piece = showPromotionDialog();
         if (piece == PieceEmpty)
           return false;
 
-        move.mToPiece = piece;
+        move.toPiece = piece;
       }
 
       deselectPiece();
@@ -289,55 +284,6 @@ bool BoardView::movePiece(uchar sourceRow, uchar sourceCol, uchar destRow, uchar
     }
   }
 
-  return false;
-//    Move currentMove(mMoveList[i]);
-//    u_int moveSourceRow = currentMove.sourceRow();
-//    u_int moveSourceCol = currentMove.sourceColumn();
-//    u_int moveDestRow = currentMove.destinationRow();
-//    u_int moveDestCol = currentMove.destinationColumn();
-//    if (moveSourceRow == sourceRow && moveSourceCol == sourceCol && moveDestRow == destRow && moveDestCol == destCol) {
-//      //if (currentMove.isPromotion())
-//      //{
-//        //if (currentMove.isCapturePromotion())
-//        //	currentMove.setQueenPromotionCapture();
-//        //	currentMove.setBishopPromotionCapture();
-//        //else
-//        //	currentMove.setBishopPromotion();
-//          //currentMove.setQueenPromotion();
-//      //}
-
-//      /*if (currentMove.isPromotion())
-//      {
-//        PromotionDialog promotionDialog(this);
-//        int dlgResult = promotionDialog.exec();
-//        if (dlgResult == QDialog::Rejected)
-//          return false;
-
-//        bool whiteMove = mChessGame->WhiteToMove();
-//        PieceType pieceType = NoPiece;
-
-//        if (promotionDialog.isQueen())
-//          pieceType = (whiteMove) ? WhiteQueen : BlackQueen;
-
-//        if (promotionDialog.isRook())
-//          pieceType = (whiteMove) ? WhiteRook : BlackRook;
-
-//        if (promotionDialog.isBishop())
-//          pieceType = (whiteMove) ? WhiteBishop : BlackBishop;
-
-//        if (promotionDialog.isKnight())
-//          pieceType = (whiteMove) ? WhiteKnight : BlackKnight;
-
-//        movePtr->SetPromotedPiece(pieceType);
-//      }*/
-
-//      deselectPiece();
-//      mGame->doMove(currentMove);
-//      emit moveCompleted(currentMove);
-
-//      return true;
-//    }
-//  }
   return false;
 }
 

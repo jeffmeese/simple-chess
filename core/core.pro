@@ -33,7 +33,8 @@ SOURCES += \
     board0x88.cpp \
     fen.cpp \
     util.cpp \
-    movelist.cpp
+    movelist.cpp \
+    bitboard.cpp
 
 HEADERS +=\
     core_global.h \
@@ -47,4 +48,5 @@ HEADERS +=\
     fen.h \
     array2d.h \
     util.h \
-    movelist.h
+    movelist.h \
+    bitboard.h

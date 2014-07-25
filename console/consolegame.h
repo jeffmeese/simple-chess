@@ -14,6 +14,7 @@ public:
   ~ConsoleGame();
 
 public:
+  void doPerft(int perftLevel) const;
   int run();
 
 private:

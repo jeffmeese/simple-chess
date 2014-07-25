@@ -23,6 +23,8 @@ private:
 
 private:
   std::unique_ptr<ConsoleGame> mGame;
+  int mArgc;
+  char ** mArgv;
 };
 
 #endif // APPLICATION_H

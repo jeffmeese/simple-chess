@@ -27,18 +27,30 @@ enum Piece
 enum PieceType
 {
   NoPiece = 0,
-  WhitePawn = 0x01,
-  WhiteKnight = 0x02,
-  WhiteBishop = 0x03,
-  WhiteRook = 0x04,
-  WhiteQueen = 0x05,
-  WhiteKing = 0x06,
-  BlackPawn = 0x08,
-  BlackKnight = 0x09,
-  BlackBishop = 0x0A,
-  BlackRook = 0x0B,
-  BlackQueen = 0x0C,
-  BlackKing = 0x0D
+  WhiteKing = 0x01,
+  WhiteQueen = 0x02,
+  WhiteRook = 0x03,
+  WhiteBishop = 0x04,
+  WhiteKnight = 0x05,
+  WhitePawn = 0x06,
+  BlackKing = 0x08,
+  BlackQueen = 0x09,
+  BlackRook = 0x0A,
+  BlackBishop = 0x0B,
+  BlackKnight = 0x0C,
+  BlackPawn = 0x0D
+//  WhitePawn = 0x01,
+//  WhiteKnight = 0x02,
+//  WhiteBishop = 0x03,
+//  WhiteRook = 0x04,
+//  WhiteQueen = 0x05,
+//  WhiteKing = 0x06,
+//  BlackPawn = 0x08,
+//  BlackKnight = 0x09,
+//  BlackBishop = 0x0A,
+//  BlackRook = 0x0B,
+//  BlackQueen = 0x0C,
+//  BlackKing = 0x0D
 };
 
 enum Castling

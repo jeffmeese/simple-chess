@@ -80,7 +80,7 @@ double Engine::evaluatePosition(Board * board)
 
   double mobilityScore = (sideMobility - opponentMobility);
   double totalScore = materialScore + 0.1*mobilityScore;
-  if (!board->isWhiteToMove())
+  if (board->sideToMove() != White)
     totalScore = -totalScore;
 
   return totalScore;

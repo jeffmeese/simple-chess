@@ -16,7 +16,7 @@ static const char SE = -15;
 
 static const char straightAttacks[] = {NORTH, SOUTH, EAST, WEST};
 static const char diagAttacks[] = {NW, NE, SE, SW};
-static const char knightAttacks[] = {-31, -33, -14, -18, 18, 14, 33, 31};
+//static const char knightAttacks[] = {-31, -33, -14, -18, 18, 14, 33, 31};
 static const bool sliders[5] = {0, 1, 1, 1, 0};
 static const char numDirections[5] = {8, 8, 4, 4, 8};
 static const char dirVectors[5][8] =
@@ -156,7 +156,7 @@ uchar Board0x88::generateMoves(uchar row, uchar col, MoveList & moveList)
   uchar totalMoves = generateMoves(allMoves);
 
   for (uchar i = 0; i < totalMoves; i++) {
-    if (allMoves[i].mSourceRow == row && allMoves[i].mSourceCol == col) {
+    if (allMoves[i].sourceRow == row && allMoves[i].sourceCol == col) {
       makeMove(allMoves[i]);
       if (!isCellAttacked(mKingIndex[!mSideToMove], mSideToMove) )
         moveList.addMove(allMoves[i]);
@@ -372,9 +372,10 @@ bool Board0x88::isCellAttacked(uchar index, char attackingColor) const
   }
 
   // Knight Attacks
+  const char knightAttacks[] = {-31, -33, -14, -18, 18, 14, 33, 31};
   for (uchar i = 0; i < 8; i++) {
     uchar pos = index + knightAttacks[i];
-    if (isValidSquare(pos) && mColors[pos] == attackingColor && mPieces[pos] == Knight)
+    if (isValidSquare(pos) && mPieces[pos] == Knight && mColors[pos] == attackingColor)
       return true;
   }
 
@@ -441,19 +442,19 @@ bool Board0x88::isCellAttacked(uchar index, char attackingColor) const
 
 void Board0x88::makeMove(const Move & newMove)
 {
-  uchar fromSquare = getIndex(newMove.mSourceRow, newMove.mSourceCol);
-  uchar toSquare = getIndex(newMove.mDestRow, newMove.mDestCol);
+  uchar fromSquare = getIndex(newMove.sourceRow, newMove.sourceCol);
+  uchar toSquare = getIndex(newMove.destRow, newMove.destCol);
 
   mPieces[fromSquare] = PieceEmpty;
   mColors[fromSquare] = ColorEmpty;
-  mPieces[toSquare] = newMove.mToPiece;
+  mPieces[toSquare] = newMove.toPiece;
   mColors[toSquare] = mSideToMove;
 
   mHalfMoveClock++;
-  if (newMove.mFromPiece == Pawn || newMove.mFlags & MoveCapture)
+  if (newMove.fromPiece == Pawn || newMove.flags & MoveCapture)
     mHalfMoveClock = 0;
 
-  if (newMove.mFromPiece == King)
+  if (newMove.fromPiece == King)
     mKingIndex[mSideToMove] = toSquare;
 
   // Update castling rights
@@ -502,7 +503,7 @@ void Board0x88::makeMove(const Move & newMove)
     break;
   }
 
-  if (newMove.mFlags & MoveCastle) {
+  if (newMove.flags & MoveCastle) {
     switch (toSquare) {
     case C1:
       mPieces[D1] = Rook;
@@ -533,13 +534,13 @@ void Board0x88::makeMove(const Move & newMove)
 
   // Update the en-passant index
   mEpIndex = -1;
-  if (newMove.mFlags & MoveEp) {
+  if (newMove.flags & MoveEp) {
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
     mEpIndex = toSquare + dir;
   }
 
   // Handle en-passant capture
-  if (newMove.mFlags & MoveEpCapture) {
+  if (newMove.flags & MoveEpCapture) {
     char dir = (mSideToMove == White) ? SOUTH : NORTH;
     mPieces[toSquare+dir] = PieceEmpty;
     mColors[toSquare+dir] = ColorEmpty;
@@ -590,25 +591,25 @@ void Board0x88::pushMove(uchar fromSquare, uchar toSquare, uchar fromPiece, ucha
   char epCol = (mEpIndex != -1) ? getCol(mEpIndex) : -1;
 
   Move newMove;
-  newMove.mSourceRow = sourceRow;
-  newMove.mSourceCol = sourceCol;
-  newMove.mDestRow = destRow;
-  newMove.mDestCol = destCol;
-  newMove.mFromPiece = fromPiece;
-  newMove.mToPiece = fromPiece;
-  newMove.mCastlingRights = mCastlingRights;
-  newMove.mHalfMoveClock = mHalfMoveClock;
-  newMove.mEnPassantCol = epCol;
-  newMove.mFlags = flags;
-  newMove.mCapturePiece = capturePiece;
+  newMove.sourceRow = sourceRow;
+  newMove.sourceCol = sourceCol;
+  newMove.destRow = destRow;
+  newMove.destCol = destCol;
+  newMove.fromPiece = fromPiece;
+  newMove.toPiece = fromPiece;
+  newMove.castlingRights = mCastlingRights;
+  newMove.halfMoveClock = mHalfMoveClock;
+  newMove.enPassantCol = epCol;
+  newMove.flags = flags;
+  newMove.capturePiece = capturePiece;
 
   if ( fromPiece == Pawn && toSquare == mEpIndex )
-    newMove.mFlags = MoveEpCapture;
+    newMove.flags = MoveEpCapture;
 
   if ( fromPiece == Pawn && ( ( destRow == 0 ) || ( destRow == 7) ) ) {
-    newMove.mFlags |= MovePromotion;
+    newMove.flags |= MovePromotion;
     for (uchar promoPiece = Queen; promoPiece <= Knight; promoPiece++) {
-      newMove.mToPiece = promoPiece;
+      newMove.toPiece = promoPiece;
       moveList.addMove(newMove);
     }
   }
@@ -716,25 +717,25 @@ void Board0x88::unmakeMove(const Move & undoMove)
 {
   static const uchar epRow[] = {2, 5};
 
-  uchar fromSquare = getIndex(undoMove.mSourceRow, undoMove.mSourceCol);
-  uchar toSquare = getIndex(undoMove.mDestRow, undoMove.mDestCol);
-  uchar fromPiece = undoMove.mFromPiece;
-  uchar flags = undoMove.mFlags;
+  uchar fromSquare = getIndex(undoMove.sourceRow, undoMove.sourceCol);
+  uchar toSquare = getIndex(undoMove.destRow, undoMove.destCol);
+  uchar fromPiece = undoMove.fromPiece;
+  uchar flags = undoMove.flags;
 
   mPieces[fromSquare] = fromPiece;
   mColors[fromSquare] = !mSideToMove;
   mPieces[toSquare] = PieceEmpty;
   mColors[toSquare] = ColorEmpty;
-  mHalfMoveClock = undoMove.mHalfMoveClock;
-  mCastlingRights = undoMove.mCastlingRights;
+  mHalfMoveClock = undoMove.halfMoveClock;
+  mCastlingRights = undoMove.castlingRights;
 
-  if (undoMove.mEnPassantCol >= 0) {
+  if (undoMove.enPassantCol >= 0) {
     //uchar epRow = (mSideToMove == White) ? 2 : 5;
-    mEpIndex = getIndex(epRow[mSideToMove], undoMove.mEnPassantCol);
+    mEpIndex = getIndex(epRow[mSideToMove], undoMove.enPassantCol);
   }
 
   if (flags & MoveCapture) {
-    mPieces[toSquare] = undoMove.mCapturePiece;
+    mPieces[toSquare] = undoMove.capturePiece;
     mColors[toSquare] = mSideToMove;
   }
 

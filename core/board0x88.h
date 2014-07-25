@@ -27,15 +27,11 @@ public:
   ~Board0x88(void);
 
 public:
-  bool canBlackCastleQueenSide() const;
-  bool canBlackCastleKingSide() const;
-  bool canWhiteCastleQueenSide() const;
-  bool canWhiteCastleKingSide() const;
+  char castlingRights() const;
   int enPassantCol() const;
   int enPassantRow() const;
   int fullMoveCounter() const;
   int halfMoveClock() const;
-  bool isWhiteToMove() const;
   char sideToMove() const;
 
 public:
@@ -94,24 +90,9 @@ private:
 //////////////////////////////////////////////////////////////
 /// Inline functions
 
-inline bool Board0x88::canBlackCastleQueenSide() const
+inline char Board0x88::castlingRights() const
 {
-  return (mCastlingRights & CastleBlackQueen);
-}
-
-inline bool Board0x88::canBlackCastleKingSide() const
-{
-  return (mCastlingRights & CastleBlackKing);
-}
-
-inline bool Board0x88::canWhiteCastleQueenSide() const
-{
-  return (mCastlingRights & CastleWhiteQueen);
-}
-
-inline bool Board0x88::canWhiteCastleKingSide() const
-{
-  return (mCastlingRights & CastleWhiteKing);
+  return mCastlingRights;
 }
 
 inline int Board0x88::enPassantCol() const
@@ -179,11 +160,6 @@ inline uchar Board0x88::kingIndex(char color) const
 inline uchar Board0x88::kingCol(char color) const
 {
   return getCol(kingIndex(color));
-}
-
-inline bool Board0x88::isWhiteToMove() const
-{
-  return (mSideToMove == White);
 }
 
 inline char Board0x88::sideToMove() const
