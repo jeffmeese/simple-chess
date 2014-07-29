@@ -46,20 +46,21 @@ void BoardView::deselectPiece()
   update();
 }
 
-void BoardView::drawBoard(QPainter &painter, const QRect & boardRect)
+void BoardView::drawBoard(QPainter &painter, int cellWidth, int cellHeight, const QRect & boardRect)
 {
   // Draw the board outline
   QPen outlinePen(Qt::black);
   outlinePen.setWidth(3);
-  painter.setPen(outlinePen);
-  painter.drawRect(boardRect);
+  //painter.setPen(outlinePen);
+  //painter.drawRect(boardRect);
 
   // Draw the board cells
-  QRect cellsRect(boardRect);
-  cellsRect.adjust(2, -2, -2, 2);
-  int cellWidth = cellsRect.width() / 8;
-  int cellHeight = cellsRect.height() / 8;
+  //QRect cellsRect(boardRect);
+  //cellsRect.adjust(2, -2, -2, 2);
+  //int cellWidth = cellsRect.width() / 9;
+  //int cellHeight = cellsRect.height() / 9;
 
+  //boardRect.adjust(cellWidth, cellHeight, -cellWidth, -cellHeight);
   bool whiteSquare = false;
   for (uint row = 0; row < 8; row++) {
     for (uint col = 0; col < 8; col++) {
@@ -117,13 +118,36 @@ void BoardView::drawBoard(QPainter &painter, const QRect & boardRect)
   }
 }
 
-void BoardView::drawPieces(QPainter & painter, const QRect &boardRect)
+void BoardView::drawCoordinates(QPainter & painter, int cellWidth, int cellHeight) const
+{
+  QFont font;
+  font.setPointSize(24);
+  font.setBold(true);
+  painter.setFont(font);
+
+  for (int i = 0; i < 8; i++) {
+    int left = 0;
+    int top = i*cellHeight;
+    QRect textRect(left, top, cellWidth, cellHeight);
+    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignCenter, QString::number(8-i) );
+  }
+
+  static const QChar letters[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
+  for (int i = 0; i < 8; i++) {
+    int left = (i+1)*cellWidth;
+    int top = 8*cellHeight;
+    QRect textRect(left, top, cellWidth, cellHeight);
+    painter.drawText(textRect, Qt::AlignHCenter | Qt::AlignCenter, QString(letters[i]) );
+  }
+}
+
+void BoardView::drawPieces(QPainter & painter, int cellWidth, int cellHeight, const QRect &boardRect)
 {
   if (mGame == NULL || mImageMap == NULL)
     return;
 
-  int cellWidth = boardRect.width() / 8;
-  int cellHeight = boardRect.height() / 8;
+  //int cellWidth = boardRect.width() / 9;
+  //int cellHeight = boardRect.height() / 9;
 
   for (uint row = 0; row < 8; row++) {
     for (uint col = 0; col < 8; col++) {
@@ -151,8 +175,9 @@ void BoardView::getCellRect(uchar row, uchar col, int width, int height, const Q
 PieceType BoardView::getPieceAt(const QPoint & point, int & selectedRow, int & selectedCol) const
 {
   QRect boardRect = rect();
-  int cellWidth = boardRect.width() / 8;
-  int cellHeight = boardRect.height() / 8;
+  int cellWidth = boardRect.width() / 9;
+  int cellHeight = boardRect.height() / 9;
+  boardRect.adjust(cellWidth, cellHeight, -cellWidth, -cellHeight);
 
   for (u_int row = 0; row < 8; row++) {
     for (u_int col = 0; col < 8; col++) {
@@ -253,10 +278,18 @@ void BoardView::paintEvent(QPaintEvent *paintEvent)
     return;
 
   QRect windowRect = paintEvent->rect();
-  windowRect.adjust(6,6,-6,-6);
+  //windowRect.adjust(6,6,-6,-6);
 
-  drawBoard(painter, windowRect);
-  drawPieces(painter, windowRect);
+  int cellWidth = windowRect.width() / 9;
+  int cellHeight = windowRect.height() / 9;
+  //windowRect.adjust(cellWidth, cellHeight, -cellWidth, -cellHeight);
+
+  QRect boardRect(windowRect);
+  boardRect.adjust(cellWidth, cellHeight, -cellWidth, -cellHeight);
+
+  drawBoard(painter, cellWidth, cellHeight, boardRect);
+  drawCoordinates(painter, cellWidth, cellHeight);
+  drawPieces(painter, cellWidth, cellHeight, boardRect);
 }
 
 bool BoardView::movePiece(uchar sourceRow, uchar sourceCol, uchar destRow, uchar destCol)

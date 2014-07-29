@@ -33,10 +33,11 @@ protected:
 
 private:
   void deselectPiece();
-  PieceType getPieceAt(const QPoint & point, int & selectedRow, int & selectedCol) const;
-  void drawBoard(QPainter & painter, const QRect & boardRect);
-  void drawPieces(QPainter & painter, const QRect & boardRect);
+  void drawBoard(QPainter & painter, int cellWidth, int cellHeight, const QRect & boardRect);
+  void drawCoordinates(QPainter & painter, int cellWidth, int cellHeight) const;
+  void drawPieces(QPainter & painter, int cellWidth, int cellHeight, const QRect & boardRect);
   void getCellRect(uchar row, uchar col, int width, int height, const QRect & boardRect, QRect & cellRect) const;
+  PieceType getPieceAt(const QPoint & point, int & selectedRow, int & selectedCol) const;
   bool isValidDestination(uchar row, uchar col);
   bool movePiece(uchar sourceRow, uchar sourceCol, uchar destRow, uchar destCol);
   void selectPiece(uchar row, uchar col);
