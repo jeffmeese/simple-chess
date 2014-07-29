@@ -4,4 +4,5 @@ moc
 Makefile
 scripts
 qrc_*
+ui_*
 debug

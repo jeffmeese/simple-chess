@@ -38,6 +38,7 @@ public:
 private:
   uchar getIndex(uchar row, uchar col) const;
   void initBoard();
+  void initMoves();
   void pushMove(uchar fromSquare, uchar toSquare, uchar pieceFrom, uchar pieceCapture, char flags, MoveList & moveList);
   ulonglong rotate90(ulonglong bb);
   ulonglong rotate45(ulonglong bb, const uint * rotMatrix);
@@ -58,6 +59,8 @@ private:
   uchar mKingIndex[2];
   uchar mPieces[64];
   uchar mColors[64];
+  ulonglong mKnightAttacks[64];           //!< Matrix of knight attacks for all squares
+  ulonglong mKingAttacks[64];             //!< Matrix of knight attacks for all squares
   ulonglong mColorBB[2];
   ulonglong mPieceBB[14];
   ulonglong mRotate90BB[64];

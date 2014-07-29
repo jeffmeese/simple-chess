@@ -10,6 +10,7 @@
 #define getIndex(row, col) (((row) << 3) + (col))
 #define getRow(index) ( (index) >> 3 )
 #define getCol(index) ( (index) & 7 )
+#define isValidSquare(row, col) ( (row < 8) && (col < 8) ? (1) : (0) )
 
 //void BitBoard::getRowCol(uint index, uint & row, uint & col) const
 //{
@@ -142,6 +143,7 @@ int bitScanForwardPopCount(ulonglong bb)
 BitBoard::BitBoard()
 {
   initBoard();
+  initMoves();
 }
 
 BitBoard::~BitBoard()
@@ -151,14 +153,92 @@ BitBoard::~BitBoard()
 
 uchar BitBoard::generateMoves(MoveList & moveList)
 {
-  ulonglong pawnPushes = (mPieceBB[WhitePawn] << 8) & mEmptyBB;
-  ulonglong moveBB = pawnPushes;
-  while (moveBB) {
-    uchar destIndex = bitScanForward(moveBB); // square index from 0..63
-    uchar sourceIndex = destIndex - 8;
-    pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveNormal, moveList);
-    moveBB &= moveBB - 1;
+  if (mSideToMove == White) {
+    ulonglong pawnPushes = (mPieceBB[WhitePawn] << 8) & ~(mAllPiecesBB >> 8);
+    ulonglong moveBB = pawnPushes;
+    while (moveBB)
+    {
+      uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+      uchar sourceIndex = destIndex - 8;
+      pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveNormal, moveList);
+      moveBB &= moveBB - 1;
+    }
+
+    ulonglong unmovedPawns = (mPieceBB[WhitePawn] & (255 << 8));
+    ulonglong pawnDoublePushes = ( (unmovedPawns & (~(mAllPiecesBB >> 8)) & (~(mAllPiecesBB >> 16)) ) ) << 16;
+    moveBB = pawnDoublePushes;
+    while (moveBB)
+    {
+      uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+      uchar sourceIndex = destIndex - 16;
+      pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveEp, moveList);
+      moveBB &= moveBB - 1;
+    }
   }
+  else {
+    ulonglong pawnPushes = (mPieceBB[BlackPawn] >> 8) & ~(mAllPiecesBB << 8);
+    ulonglong moveBB = pawnPushes;
+    while (moveBB)
+    {
+      uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+      uchar sourceIndex = destIndex + 8;
+      pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveNormal, moveList);
+      moveBB &= moveBB - 1;
+    }
+
+    ulonglong unmovedPawns = (mPieceBB[BlackPawn] & (C64(255) << 48));
+    ulonglong pawnDoublePushes = ( (unmovedPawns & (~(mAllPiecesBB << 8)) & (~(mAllPiecesBB << 16)) ) ) >> 16;
+    moveBB = pawnDoublePushes;
+    while (moveBB)
+    {
+      uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+      uchar sourceIndex = destIndex + 16;
+      pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveEp, moveList);
+      moveBB &= moveBB - 1;
+    }
+  }
+
+  for (uchar index = 0; index < 63; index++) {
+    if (mColors[index] == mSideToMove) {
+
+      ulonglong moveBB = 0;
+      switch (mPieces[index]) {
+      case Knight:
+        moveBB = mKnightAttacks[index];
+        break;
+      case King:
+        moveBB = mKingAttacks[index];
+        break;
+      }
+
+      moveBB &= ~mColorBB[mSideToMove];
+      while (moveBB)
+      {
+        uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+        MoveFlags flags = (mPieces[destIndex] == PieceEmpty) ? MoveNormal : MoveCapture;
+        pushMove(index, destIndex, mPieces[index], mPieces[destIndex], flags, moveList);
+        moveBB &= moveBB - 1;
+      }
+    }
+  }
+  // Generate the double push moves
+
+//  moveBB = pawnDoublePushes;
+
+//  ulonglong pawnPushes = (mPieceBB[WhitePawn] << 8) & mEmptyBB;
+
+//  // Generate the double push moves
+//  ulonglong unmovedPawns = (mPieceBB[WhitePawn] & (255 << 8));
+//  ulonglong pawnDoublePushes = ( (unmovedPawns & (~(mAllPiecesBB >> 8)) & (~(mAllPiecesBB >> 16)) ) ) << 16;
+//  pawnDoublePushes &= C64(1) << (index+16);
+
+//  ulonglong moveBB = pawnPushes | pawnDoublePushes;
+//  while (moveBB) {
+//    uchar destIndex = bitScanForward(moveBB); // square index from 0..63
+//    uchar sourceIndex = destIndex - 8;
+//    pushMove(sourceIndex, destIndex, Pawn, PieceEmpty, MoveNormal, moveList);
+//    moveBB &= moveBB - 1;
+//  }
 
   return moveList.size();
 }
@@ -182,6 +262,8 @@ void BitBoard::initBoard()
   mKingIndex[White] = E1;
   mKingIndex[Black] = E8;
   mEpIndex = -1;
+  mSideToMove = White;
+  mCastlingRights = CastleWhiteKing | CastleWhiteQueen | CastleBlackKing | CastleBlackQueen;
 
   // Initialize the pieces and colors
   for (uint index = 0; index < 128; index++) {
@@ -236,6 +318,32 @@ void BitBoard::initBoard()
   }
 }
 
+void BitBoard::initMoves()
+{
+  static const int knightIncr[8][2] = { {1, 2}, {2, 1}, {2, -1}, {1, -2}, {-1,-2}, {-2,-1}, {-2, 1}, {-1, 2} };
+  static const int kingIncr[8][2] = { {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1} };
+
+  for (uchar i = 0; i < 64; i++) {
+    mKnightAttacks[i] = C64(0);
+    mKingAttacks[i] = C64(0);
+    for (uchar j = 0; j < 8; j++) {
+      uchar destRow = getRow(i) + knightIncr[j][0];
+      uchar destCol = getCol(i) + knightIncr[j][1];
+      if (isValidSquare(destRow, destCol)) {
+        uchar index = getIndex(destRow, destCol);
+        mKnightAttacks[i] |= (C64(1) << index);
+      }
+
+      destRow = getRow(i) + kingIncr[j][0];
+      destCol = getCol(i) + kingIncr[j][1];
+      if (isValidSquare(destRow, destCol)) {
+        uchar index = getIndex(destRow, destCol);
+        mKingAttacks[i] |= (C64(1) << index);
+      }
+    }
+  }
+}
+
 bool BitBoard::isKingAttacked(char kingColor) const
 {
   return false;
@@ -272,6 +380,7 @@ void BitBoard::makeMove(const Move & newMove)
 
   mPieceBB[bbIndex] ^= fromToBB;
   mColorBB[mSideToMove] ^= fromToBB;
+  //writeBitBoard(mPieceBB[BlackPawn]);
   //writeBitBoard(mPieceBB[bbIndex]);
   //writeBitBoard(mColorBB[mSideToMove]);
 
@@ -373,6 +482,18 @@ void BitBoard::makeMove(const Move & newMove)
     mPieces[toSquare+dir] = PieceEmpty;
     mColors[toSquare+dir] = ColorEmpty;
   }
+
+  mAllPiecesBB = mColorBB[White] | mColorBB[Black];
+  mEmptyBB = ~mAllPiecesBB;
+  mRotate90AllPieces = rotate90(mAllPiecesBB);
+  mRotate45RightPieces = rotate45(mAllPiecesBB, a1h8Matrix);
+  mRotate45LeftPieces = rotate45(mAllPiecesBB, a8h1Matrix);
+//  for (uchar index = 0; index < 64; index++)
+//  {
+//    mRotate45RightBB[index] = rotate45((C64(1)<<index), a1h8Matrix);
+//    mRotate45LeftBB[index] = rotate45((C64(1)<<index), a8h1Matrix);
+//    mRotate90BB[index] = rotate90((C64(1)<<index));
+//  }
 
   mSideToMove = !mSideToMove;
 }
@@ -488,11 +609,20 @@ void BitBoard::unmakeMove(const Move & undoMove)
   uchar toSquare = getIndex(undoMove.destRow, undoMove.destCol);
   uchar fromPiece = undoMove.fromPiece;
   uchar flags = undoMove.flags;
+  ulonglong fromBB = (C64(1) << fromSquare);
+  ulonglong toBB = (C64(1) << toSquare);
+  ulonglong fromToBB = fromBB ^ toBB;
+  uchar bbIndex = undoMove.fromPiece + !mSideToMove*WhitePawn + 1;
 
   mPieces[fromSquare] = fromPiece;
   mColors[fromSquare] = !mSideToMove;
   mPieces[toSquare] = PieceEmpty;
   mColors[toSquare] = ColorEmpty;
+
+  mPieceBB[bbIndex] ^= fromToBB;
+  mColorBB[!mSideToMove] ^= fromToBB;
+  //writeBitBoard(mPieceBB[BlackPawn]);
+
   mHalfMoveClock = undoMove.halfMoveClock;
   mCastlingRights = undoMove.castlingRights;
 
@@ -542,6 +672,18 @@ void BitBoard::unmakeMove(const Move & undoMove)
       break;
     }
   }
+
+  mAllPiecesBB = mColorBB[White] | mColorBB[Black];
+  mEmptyBB = ~mAllPiecesBB;
+  mRotate90AllPieces = rotate90(mAllPiecesBB);
+  mRotate45RightPieces = rotate45(mAllPiecesBB, a1h8Matrix);
+  mRotate45LeftPieces = rotate45(mAllPiecesBB, a8h1Matrix);
+//  for (uchar index = 0; index < 64; index++)
+//  {
+//    mRotate45RightBB[index] = rotate45((C64(1)<<index), a1h8Matrix);
+//    mRotate45LeftBB[index] = rotate45((C64(1)<<index), a8h1Matrix);
+//    mRotate90BB[index] = rotate90((C64(1)<<index));
+//  }
 
   mSideToMove = !mSideToMove;
 }
